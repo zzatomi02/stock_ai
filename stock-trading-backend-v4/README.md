@@ -16,15 +16,15 @@ Spring Boot 기반 주식 트레이딩 백엔드 API입니다.
 
 ## 문서 (사용 설명서)
 
-운영·개발 설명은 **`docs/`** 폴더에 Markdown으로 정리되어 있습니다.
+모노레포 **루트** `stock/docs/` 에 있습니다 (백엔드 전용 폴더 아님).
 
 | 문서 | 설명 |
 |------|------|
-| [docs/README.md](docs/README.md) | 문서 목록·보는 방법 |
-| [docs/TRADING-FLOW.md](docs/TRADING-FLOW.md) | 장전·장중·장마감 파이프라인, API, 로컬 실행 |
-| [docs/AI-PLATFORM.md](docs/AI-PLATFORM.md) | AI 배치, 캐시, 정책, 운영 체크리스트 |
+| [../docs/README.md](../docs/README.md) | 문서 목록 |
+| [../docs/TRADING-FLOW.md](../docs/TRADING-FLOW.md) | 장전·장중·장마감 파이프라인 |
+| [../docs/AI-PLATFORM.md](../docs/AI-PLATFORM.md) | AI 배치·캐시 |
 
-IDE에서 `docs/TRADING-FLOW.md` 를 연 뒤 Markdown 미리보기(`Ctrl+Shift+V`)를 쓰거나, Cursor 채팅에서 `@docs/TRADING-FLOW.md` 로 첨부해 질문하면 됩니다.
+Cursor: `@docs/TRADING-FLOW.md` (워크스페이스 루트가 `stock` 일 때)
 
 ## 주요 기능
 
