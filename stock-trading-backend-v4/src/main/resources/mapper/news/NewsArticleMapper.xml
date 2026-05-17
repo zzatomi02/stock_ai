@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.noono0.stock.news.mapper.NewsArticleMapper">
+
+  <select id="countByDedupHash" resultType="int">
+    SELECT COUNT(*)
+    FROM news_article
+    WHERE dedup_hash = #{dedupHash}
+  </select>
+
+  <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+    INSERT INTO news_article (stock_code, title, summary, source_name, article_url, published_at, collected_at, keyword_score,
+                              ai_score, dedup_hash)
+    VALUES (#{stockCode}, #{title}, #{summary}, #{sourceName}, #{articleUrl}, #{publishedAt}, #{collectedAt}, #{keywordScore},
+            #{aiScore}, #{dedupHash})
+  </insert>
+
+  <select id="findByStockCode" resultType="com.noono0.stock.news.domain.NewsArticle">
+    SELECT id, stock_code AS stockCode, title, summary, source_name AS sourceName, article_url AS articleUrl,
+           published_at AS publishedAt, collected_at AS collectedAt, keyword_score AS keywordScore, ai_score AS aiScore, dedup_hash AS dedupHash
+    FROM news_article
+    WHERE stock_code = #{stockCode}
+    ORDER BY COALESCE(published_at, collected_at) DESC, id DESC
+    LIMIT #{limit}
+  </select>
+</mapper>

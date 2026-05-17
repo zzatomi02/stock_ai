@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.noono0.stock.broker.mapper.BrokerOrderAttemptMapper">
+
+  <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+    INSERT INTO broker_order_attempt (client_order_key, stock_code, side, quantity, mode, raw_response, reasoning, signal_id, reason_snapshot, created_at)
+    VALUES (#{clientOrderKey}, #{stockCode}, #{side}, #{quantity}, #{mode}, #{rawResponse}, #{reasoning}, #{signalId}, #{reasonSnapshot}, #{createdAt})
+  </insert>
+
+  <select id="findRecent" resultType="com.noono0.stock.broker.domain.BrokerOrderAttempt">
+    SELECT id, client_order_key AS clientOrderKey, stock_code AS stockCode, side, quantity, mode, raw_response AS rawResponse,
+           reasoning, signal_id AS signalId, reason_snapshot AS reasonSnapshot, created_at AS createdAt
+    FROM broker_order_attempt
+    ORDER BY created_at DESC
+    LIMIT #{limit}
+  </select>
+
+  <select id="count" resultType="long">
+    SELECT COUNT(*)
+    FROM broker_order_attempt
+  </select>
+
+  <select id="countByClientOrderKey" resultType="int">
+    SELECT COUNT(*)
+    FROM broker_order_attempt
+    WHERE client_order_key = #{clientOrderKey}
+  </select>
+
+  <select id="countByStockCodeAndCreatedAtAfter" resultType="int">
+    SELECT COUNT(*)
+    FROM broker_order_attempt
+    WHERE stock_code = #{stockCode}
+      AND created_at &gt; #{after}
+  </select>
+
+  <select id="countBySideAndCreatedAtBetween" resultType="int">
+    SELECT COUNT(*)
+    FROM broker_order_attempt
+    WHERE side = #{side}
+      AND created_at &gt;= #{from}
+      AND created_at &lt; #{to}
+  </select>
+
+  <select id="countByStockCodeAndSideAndCreatedAtAfter" resultType="int">
+    SELECT COUNT(*)
+    FROM broker_order_attempt
+    WHERE stock_code = #{stockCode}
+      AND side = #{side}
+      AND created_at &gt; #{after}
+  </select>
+</mapper>

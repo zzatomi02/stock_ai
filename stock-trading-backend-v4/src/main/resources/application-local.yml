@@ -1,0 +1,186 @@
+# 로컬 전용. 비밀키는 이 파일에 넣지 말고 환경 변수 또는 상위 폴더 stock/.env + Docker Compose 사용.
+# IDE 에서만 실행 시: 실행 구성에 동일 변수 등록 또는 dotenv 플러그인.
+#
+# p6spy SQL 로그: 드라이버·URL이 반드시 P6Spy 이어야 함
+#   driver-class: com.p6spy.engine.spy.P6SpyDriver
+#   url: jdbc:p6spy:mysql://... (p6spy 접두가 없으면 쿼리 로그가 전혀 안 남음)
+logging:
+  level:
+    # Slf4JLogger 가 SQL 을 info 로 남김(기본 루트가 INFO면 그대로 콘솔에 보임)
+    p6spy: info
+    # MyBatis JDBC 로그(Preparing/Parameters, SQL에 ? 남음) 끔 — 바인딩된 SQL은 P6Spy [P6SPY] 한 줄만 본다.
+    com.noono0.stock.mybatis.oneline: info
+    com.noono0.stock.auth.mapper: info
+    com.noono0.stock.broker.mapper: info
+    com.noono0.stock.news.mapper: info
+    com.noono0.stock.ops.audit.mapper: info
+    com.noono0.stock.ops.system.mapper: info
+    com.noono0.stock.integration.kis.credential.mapper: info
+    com.noono0.stock.strategy.mapper: info
+    com.noono0.stock.statistics.mapper: info
+    com.noono0.stock.llm: info
+
+spring:
+  # OPENAI API 키: 환경변수 OPENAI_API_KEY 또는 아래 import(깃에 안 올라감) application-secrets.local.yml
+  config:
+    import: optional:classpath:application-secrets.local.yml
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.starttls.required: true
+      mail.smtp.connectiontimeout: 10000
+      mail.smtp.timeout: 10000
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      password: ${SPRING_DATA_REDIS_PASSWORD:}
+  datasource:
+    driver-class-name: com.p6spy.engine.spy.P6SpyDriver
+    # useServerPrepStmts=false: P6Spy의 바인딩 치환(%(sql*))이 ?로 남는 경우 완화
+    url: ${SPRING_DATASOURCE_URL:jdbc:p6spy:mysql://localhost:3306/stock_ai_db?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&useServerPrepStmts=false}
+    username: ${SPRING_DATASOURCE_USERNAME:stock_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:1234}
+  jpa:
+    hibernate:
+      # 스키마는 엔티티 기준 자동 반영. Flyway SQL에는 CREATE TABLE 없음(이력용 마이그레이션만).
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc.time_zone: Asia/Seoul
+    open-in-view: false
+  flyway:
+    enabled: true
+    # 이미 적용된 V1 스크립트를 수정하면 DB에 저장된 체크섬과 달라져 기동 실패함 → 로컬/도커에서만 검증 완화.
+    # 운영에서는 true 유지하거나, `flyway repair` 또는 DB 볼륨 초기화(`docker compose down -v`) 권장.
+    validate-on-migrate: false
+  sql:
+    init:
+      mode: never
+
+mybatis:
+  mapper-locations: classpath:/mapper/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+
+server:
+  port: 8080
+
+management:
+  health:
+    mail:
+      enabled: false
+
+app:
+  market:
+    # KIS 초당 호출 제한 회피를 위한 Top100 스냅샷 최소 갱신 간격(초)
+    top100-refresh-sec: ${MARKET_TOP100_REFRESH_SEC:30}
+    analyzer:
+      stub-theme: ${MARKET_STUB_THEME:false}
+      stub-large-cap: ${MARKET_STUB_LARGE_CAP:false}
+      stub-small-cap: ${MARKET_STUB_SMALL_CAP:false}
+      stub-high-volatility: ${MARKET_STUB_HIGH_VOLATILITY:false}
+  redis:
+    enabled: ${APP_REDIS_ENABLED:false}
+  notifications:
+    telegram-bot-token: ${TELEGRAM_BOT_TOKEN:}
+    telegram-chat-id: ${TELEGRAM_CHAT_ID:}
+    discord-webhook-url: ${DISCORD_WEBHOOK_URL:}
+  execution:
+    phase: ${APP_EXECUTION_PHASE:OBSERVE}
+    buy-score-threshold: ${SIGNAL_BUY_THRESHOLD:62}
+    sell-score-threshold: ${SIGNAL_SELL_THRESHOLD:38}
+  auto-trade:
+    enabled: ${AUTO_TRADE_ENABLED:false}
+    scan-interval-ms: 60000
+    demo-stock: "005930"
+    demo-qty: 1
+  news:
+    collect-enabled: ${NEWS_COLLECT_ENABLED:false}
+    collect-query: "코스피"
+    collect-cron: "0 0 */3 * * *"
+  backtest:
+    enabled: true
+  risk:
+    daily-max-loss-rate-percent: 3.0
+    daily-max-loss-amount: 500000
+    reference-equity: 10000000
+    max-position-per-symbol-percent: 10.0
+    max-position-per-strategy-amount: 2000000
+    daily-max-buy-count: 50
+    reentry-cooldown-minutes: 30
+    consecutive-stop-loss-limit: 3
+    market-crash-mood-threshold: 20
+    single-order-max-amount: 10000000
+    halt-on-api-error: true
+    quote-delay-max-ms: 5000
+    time-window-limits:
+      - start: "09:00"
+        end: "09:10"
+        max-trades: 3
+  notifications:
+    email-enabled: false
+    alert-email: ${RISK_ALERT_EMAIL:}
+  front-origin: ${NEXT_ORIGIN:http://localhost:3000}
+  auth:
+    password-reset:
+      code-ttl-minutes: ${PASSWORD_RESET_TTL_MINUTES:10}
+      resend-cooldown-seconds: ${PASSWORD_RESET_COOLDOWN_SEC:60}
+      max-verify-attempts: ${PASSWORD_RESET_MAX_ATTEMPTS:5}
+  security:
+    permit-all: true
+    swagger-enabled: true
+    cors:
+      allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:${NEXT_ORIGIN:http://localhost:3000}}
+  trading:
+    flow:
+      system-user-id: system
+      pre-market-pipeline-enabled: true
+      post-market-pipeline-enabled: true
+      ingest-triggers-strategy-analysis: true
+      pre-market-news-collect-enabled: true
+      pre-market-news-display-per-stock: 5
+  ai:
+    base-url: ${AI_BASE_URL:http://localhost:8001}
+    platform:
+      batch-enabled: ${AI_BATCH_ENABLED:true}
+      batch-max-jobs-per-tick: 5
+      batch-max-stocks-per-tick: 8
+      rule-score-weight: 0.80
+      ai-score-weight: 0.20
+      default-openai-model: ${AI_DEFAULT_MODEL:gpt-4o-mini}
+      intraday-interval-ms: ${AI_INTRADAY_INTERVAL_MS:180000}
+      closing-interval-ms: ${AI_CLOSING_INTERVAL_MS:300000}
+      cron:
+        pre-market: "0 10/10 8 * * MON-FRI"
+        post-market: "0 40/15 15-23 * * MON-FRI"
+  openai:
+    # api-key 는 OPENAI_API_KEY 환경변수 또는 application-secrets.local.yml
+    base-url: https://api.openai.com
+    analyze-on-ingest: ${OPENAI_ANALYZE_ON_INGEST:false}
+  naver:
+    news:
+      client-id: ${NAVER_CLIENT_ID:}
+      client-secret: ${NAVER_CLIENT_SECRET:}
+      sort: ${NAVER_NEWS_SORT:date}
+  kis:
+    mode: ${KIS_MODE:paper}
+    account-no: ${KIS_ACCOUNT_NO:}
+    product-code: ${KIS_PRODUCT_CODE:01}
+    realtime:
+      enabled: ${KIS_REALTIME_ENABLED:false}
+      subscribe-stock: ${KIS_REALTIME_STOCK:005930}
+      ws-url: ${KIS_REALTIME_WS_URL:}
+    paper:
+      app-key: ${KIS_PAPER_APPKEY:}
+      app-secret: ${KIS_PAPER_SECRET:}
+    real:
+      app-key: ${KIS_REAL_APPKEY:}
+      app-secret: ${KIS_REAL_SECRET:}

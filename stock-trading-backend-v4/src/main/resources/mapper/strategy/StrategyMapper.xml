@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.noono0.stock.strategy.mapper.StrategyMapper">
+
+  <select id="selectAll" resultType="com.noono0.stock.strategy.domain.Strategy">
+    SELECT id,
+           name,
+           code,
+           category,
+           sort_order AS sortOrder,
+           enabled,
+           target_market,
+           risk_limit_rate,
+           take_profit_rate,
+           max_buy_amount,
+           keyword_score_enabled,
+           ai_score_enabled,
+           auto_trade_enabled,
+           reentry_cooldown_minutes,
+           min_score_threshold AS minScoreThreshold,
+           created_at,
+           updated_at
+    FROM strategy
+    ORDER BY id
+  </select>
+
+</mapper>

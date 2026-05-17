@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "../stock-trading-ai-service-v4"
+		},
+		{
+			"path": "."
+		},
+		{
+			"path": "../stock-trading-frontend-v4"
+		}
+	]
+}

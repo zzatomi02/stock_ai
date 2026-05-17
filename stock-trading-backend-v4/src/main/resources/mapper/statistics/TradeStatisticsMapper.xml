@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.noono0.stock.statistics.mapper.TradeStatisticsMapper">
+
+  <select id="findTradeSummary" resultType="com.noono0.stock.statistics.dto.TradeSummaryRow">
+    SELECT
+      COUNT(*) AS totalTrades,
+      SUM(CASE WHEN profit_rate >= 0 THEN 1 ELSE 0 END) AS winCount,
+      SUM(CASE WHEN profit_rate &lt; 0 THEN 1 ELSE 0 END) AS lossCount,
+      COALESCE(AVG(profit_rate), 0) AS avgProfitRate,
+      COALESCE(SUM(profit_amount), 0) AS totalProfitAmount,
+      COALESCE(MIN(profit_rate), 0) AS worstRate,
+      COALESCE(MAX(profit_rate), 0) AS bestRate
+    FROM trade_execution
+    WHERE bought_at BETWEEN #{from} AND #{to}
+      <if test="keyword != null and keyword != ''">
+        AND EXISTS (
+          SELECT 1 FROM trade_execution_keyword tek
+          WHERE tek.execution_id = trade_execution.id
+            AND tek.keyword = #{keyword}
+        )
+      </if>
+  </select>
+
+  <select id="findTradeTimeline" resultType="com.noono0.stock.statistics.dto.TradeTimelineRow">
+    SELECT DATE(bought_at) AS tradeDate,
+           COUNT(*) AS tradeCount,
+           COALESCE(SUM(profit_amount), 0) AS profitAmount,
+           COALESCE(AVG(profit_rate), 0) AS avgProfitRate
+    FROM trade_execution
+    WHERE bought_at BETWEEN #{from} AND #{to}
+    GROUP BY DATE(bought_at)
+    ORDER BY DATE(bought_at)
+  </select>
+
+  <select id="findKeywordPerformance" resultType="com.noono0.stock.statistics.dto.KeywordPerformanceRow">
+    SELECT tek.keyword AS keyword,
+           COUNT(*) AS hitCount,
+           COALESCE(AVG(te.profit_rate), 0) AS avgProfitRate,
+           COALESCE(SUM(te.profit_amount), 0) AS totalProfitAmount
+    FROM trade_execution te
+    JOIN trade_execution_keyword tek ON tek.execution_id = te.id
+    WHERE te.bought_at BETWEEN #{from} AND #{to}
+    GROUP BY tek.keyword
+    ORDER BY totalProfitAmount DESC
+  </select>
+
+  <select id="countTradeExecutions" resultType="long">
+    SELECT COUNT(*) FROM trade_execution
+  </select>
+
+</mapper>

@@ -1,0 +1,133 @@
+# 개발용: 소스 마운트 + 핫리로드. 전체 이미지 재빌드 없이 코드 반영.
+# 사용법 (stock 폴더에서):
+#   docker compose -f docker-compose.dev.yml up
+# 최초 1회만 느릴 수 있음(의존성 설치). 중지: Ctrl+C 또는 docker compose -f docker-compose.dev.yml down
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: stock-mysql
+    environment:
+      MYSQL_DATABASE: stock_ai_db
+      MYSQL_USER: stock_user
+      MYSQL_PASSWORD: "1234"
+      MYSQL_ROOT_PASSWORD: "local_root_only"
+    # Windows: 3307–3406 등이 excludedportrange 이면 3307 바인딩 실패 → 13307 사용
+    ports:
+      - "13307:3306"
+    volumes:
+      - stock_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 40s
+
+  ai-service:
+    image: python:3.12-slim
+    container_name: stock-ai
+    working_dir: /app
+    volumes:
+      - ./stock-trading-ai-service-v4:/app
+      - pip_cache:/root/.cache/pip
+    command: >
+      sh -c "pip install -q uv && uv pip install --system -q -e . && exec uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload"
+    ports:
+      - "8001:8001"
+    environment:
+      MAX_REQUEST_BYTES: "${MAX_REQUEST_BYTES:-1048576}"
+      MAX_IMAGE_BASE64_LENGTH: "${MAX_IMAGE_BASE64_LENGTH:-750000}"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health', timeout=3).read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  backend:
+    image: maven:3.9.9-eclipse-temurin-17
+    container_name: stock-backend
+    working_dir: /app
+    volumes:
+      - ./stock-trading-backend-v4:/app
+      - maven_repo:/root/.m2
+    command: ["mvn", "-q", "clean", "spring-boot:run"]
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: "${SPRING_PROFILES_ACTIVE:-local}"
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.p6spy.engine.spy.P6SpyDriver
+      SPRING_DATASOURCE_URL: jdbc:p6spy:mysql://mysql:3306/stock_ai_db?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&useServerPrepStmts=false
+      SPRING_DATASOURCE_USERNAME: stock_user
+      SPRING_DATASOURCE_PASSWORD: "1234"
+      AI_BASE_URL: http://ai-service:8001
+      APP_SECURITY_USERNAME: "${APP_SECURITY_USERNAME:-ops}"
+      APP_SECURITY_PASSWORD: "${APP_SECURITY_PASSWORD:-local-dev-password}"
+      APP_CORS_ALLOWED_ORIGINS: "${APP_CORS_ALLOWED_ORIGINS:-http://localhost:3000}"
+      APP_SWAGGER_ENABLED: "${APP_SWAGGER_ENABLED:-true}"
+      KIS_PAPER_APPKEY: "${KIS_PAPER_APPKEY:-}"
+      KIS_PAPER_SECRET: "${KIS_PAPER_SECRET:-}"
+      KIS_PAPER_CANO: "${KIS_PAPER_CANO:-}"
+      KIS_PAPER_ACNT_PRDT_CD: "${KIS_PAPER_ACNT_PRDT_CD:-}"
+      KIS_REAL_APPKEY: "${KIS_REAL_APPKEY:-}"
+      KIS_REAL_SECRET: "${KIS_REAL_SECRET:-}"
+      KIS_REAL_CANO: "${KIS_REAL_CANO:-}"
+      KIS_REAL_ACNT_PRDT_CD: "${KIS_REAL_ACNT_PRDT_CD:-}"
+      NAVER_CLIENT_ID: "${NAVER_CLIENT_ID:-}"
+      NAVER_CLIENT_SECRET: "${NAVER_CLIENT_SECRET:-}"
+      NAVER_NEWS_SORT: "${NAVER_NEWS_SORT:-date}"
+      # 루트 .env 의 OPENAI_API_KEY → app.openai.apiKey 바인딩
+      APP_OPENAI_APIKEY: "${OPENAI_API_KEY:-}"
+      # true 이면 뉴스 ingest 저장 직후 기본 LLM 템플릿으로 ai_score·원문 갱신(비용 발생)
+      APP_OPENAI_ANALYZEONINGEST: "${OPENAI_ANALYZE_ON_INGEST:-false}"
+      APP_EXECUTION_PHASE: "${APP_EXECUTION_PHASE:-OBSERVE}"
+      AUTO_TRADE_ENABLED: "${AUTO_TRADE_ENABLED:-false}"
+      MAIL_HOST: "${MAIL_HOST:-}"
+      MAIL_PORT: "${MAIL_PORT:-587}"
+      MAIL_USERNAME: "${MAIL_USERNAME:-}"
+      MAIL_PASSWORD: "${MAIL_PASSWORD:-}"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/actuator/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 60s
+    depends_on:
+      mysql:
+        condition: service_healthy
+      ai-service:
+        condition: service_healthy
+
+  frontend:
+    image: node:20-bullseye
+    container_name: stock-frontend
+    working_dir: /app
+    volumes:
+      # 소스는 호스트와 동기화, node_modules 는 Linux 전용 볼륨 (Windows 호스트 node_modules 마운트 시 next 깨짐 방지)
+      - ./stock-trading-frontend-v4:/app
+      - frontend_node_modules:/app/node_modules
+      - frontend_pnpm_store:/root/.local/share/pnpm/store
+    command: >
+      sh -c "corepack enable && pnpm install && exec pnpm dev -H 0.0.0.0 -p 3000"
+    ports:
+      - "3000:3000"
+    environment:
+      AUTH_SECRET: "${AUTH_SECRET:-local-docker-insecure-auth-secret-min-32chars-ok}"
+      AUTH_TRUST_HOST: "true"
+      RUNNING_IN_DOCKER: "true"
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8080/api
+      INTERNAL_API_BASE_URL: http://backend:8080/api
+      BACKEND_BASIC_USERNAME: "${BACKEND_BASIC_USERNAME:-ops}"
+      BACKEND_BASIC_PASSWORD: "${BACKEND_BASIC_PASSWORD:-local-dev-password}"
+      PROXY_ALLOWED_PREFIXES: "${PROXY_ALLOWED_PREFIXES:-auth,market,dashboard,strategies,strategy,news,statistics,backtest,ai,broker,ops,signals,watchlist,risk,llm,orders}"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  stock_mysql_data:
+  maven_repo:
+  frontend_node_modules:
+  frontend_pnpm_store:
+  pip_cache:

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.noono0.stock.news.mapper.StockSymbolMapMapper">
+
+  <select id="findAll" resultType="com.noono0.stock.news.domain.StockSymbolMap">
+    SELECT id,
+           kis_code     AS kisCode,
+           stock_name   AS stockName,
+           naver_query  AS naverQuery,
+           created_at   AS createdAt
+    FROM stock_symbol_map
+    ORDER BY id
+  </select>
+
+  <!-- kis_code 유니크 기준: 신규 삽입·동일 kis_code 시 컬럼 갱신 -->
+  <insert id="upsert">
+    INSERT INTO stock_symbol_map (kis_code, stock_name, naver_query, created_at)
+    VALUES (#{kisCode}, #{stockName}, #{naverQuery}, COALESCE(#{createdAt}, NOW(3)))
+    ON DUPLICATE KEY UPDATE stock_name  = VALUES(stock_name),
+                            naver_query = VALUES(naver_query)
+  </insert>
+</mapper>

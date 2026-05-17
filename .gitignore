@@ -1,0 +1,60 @@
+# 환경·비밀
+.env
+.env.local
+.env.*.local
+stock-trading-backend-v4/src/main/resources/application-secrets.local.yml
+
+# Node / Next.js (프론트·AI 서비스)
+node_modules/
+**/node_modules/
+.pnpm-store/
+**/.pnpm-store/
+.next/
+**/.next/
+out/
+dist/
+.turbo/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# Java / Maven (백엔드)
+target/
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
+replay_pid*
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 로그·임시
+*.log
+logs/
+tmp/
+temp/
+
+# Python (AI 서비스 venv 등)
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+*.egg-info/
+**/*.egg-info/
+
+# Docker 로컬 볼륨 등 (필요 시)
+# *.local

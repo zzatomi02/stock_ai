@@ -1,0 +1,90 @@
+# 버전은 각 service 의 image / Dockerfile FROM 에 고정됩니다. 호스트에 Node/Java/Python 설치 불필요.
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: stock-mysql
+    environment:
+      MYSQL_DATABASE: stock_ai_db
+      MYSQL_USER: stock_user
+      MYSQL_PASSWORD: "1234"
+      MYSQL_ROOT_PASSWORD: "local_root_only"
+    ports:
+      - "3306:3306"
+    volumes:
+      - stock_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 40s
+
+  ai-service:
+    build:
+      context: ./stock-trading-ai-service-v4
+    image: stock-ai-service:local
+    container_name: stock-ai
+    ports:
+      - "8001:8001"
+
+  backend:
+    build:
+      context: ./stock-trading-backend-v4
+    image: stock-backend:local
+    container_name: stock-backend
+    ports:
+      - "8080:8080"
+    # env_file 제거: 파일이 없으면 compose 가 실패함. 프로젝트 루트 .env 는 ${변수} 치환에만 사용 가능.
+    environment:
+      SPRING_PROFILES_ACTIVE: "${SPRING_PROFILES_ACTIVE:-local}"
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.p6spy.engine.spy.P6SpyDriver
+      SPRING_DATASOURCE_URL: jdbc:p6spy:mysql://mysql:3306/stock_ai_db?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&useServerPrepStmts=false
+      SPRING_DATASOURCE_USERNAME: stock_user
+      SPRING_DATASOURCE_PASSWORD: "1234"
+      AI_BASE_URL: http://ai-service:8001
+      KIS_PAPER_APPKEY: "${KIS_PAPER_APPKEY:-}"
+      KIS_PAPER_SECRET: "${KIS_PAPER_SECRET:-}"
+      KIS_PAPER_CANO: "${KIS_PAPER_CANO:-}"
+      KIS_PAPER_ACNT_PRDT_CD: "${KIS_PAPER_ACNT_PRDT_CD:-}"
+      KIS_REAL_APPKEY: "${KIS_REAL_APPKEY:-}"
+      KIS_REAL_SECRET: "${KIS_REAL_SECRET:-}"
+      KIS_REAL_CANO: "${KIS_REAL_CANO:-}"
+      KIS_REAL_ACNT_PRDT_CD: "${KIS_REAL_ACNT_PRDT_CD:-}"
+      NAVER_CLIENT_ID: "${NAVER_CLIENT_ID:-}"
+      NAVER_CLIENT_SECRET: "${NAVER_CLIENT_SECRET:-}"
+      NAVER_NEWS_SORT: "${NAVER_NEWS_SORT:-date}"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/actuator/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 60s
+    depends_on:
+      mysql:
+        condition: service_healthy
+      ai-service:
+        condition: service_started
+
+  frontend:
+    build:
+      context: ./stock-trading-frontend-v4
+      args:
+        AUTH_SECRET: "${AUTH_SECRET:-local-docker-build-default-secret-min-32chars-xx}"
+    image: stock-frontend:local
+    container_name: stock-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      AUTH_SECRET: "${AUTH_SECRET:-local-docker-insecure-auth-secret-min-32chars-ok}"
+      AUTH_TRUST_HOST: "true"
+      RUNNING_IN_DOCKER: "true"
+      # 브라우저에서 호스트의 백엔드로 요청 (Spring 은 /api 경로)
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8080/api
+      # 서버 컴포넌트/SSR: 프론트 컨테이너 → 백엔드 컨테이너 (localhost 는 컨테이너 자신)
+      INTERNAL_API_BASE_URL: http://backend:8080/api
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  stock_mysql_data:
