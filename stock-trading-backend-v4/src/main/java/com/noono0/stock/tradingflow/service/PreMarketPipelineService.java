@@ -3,6 +3,7 @@ package com.noono0.stock.tradingflow.service;
 import com.noono0.stock.ai.platform.enums.AiBatchPhase;
 import com.noono0.stock.ai.platform.service.AiAnalysisTargetCollector;
 import com.noono0.stock.ai.platform.service.AiBatchOrchestratorService;
+import com.noono0.stock.disclosure.service.DisclosureCollectService;
 import com.noono0.stock.news.service.NewsIngestService;
 import com.noono0.stock.tradingflow.config.TradingFlowProperties;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ public class PreMarketPipelineService {
     private final TradingFlowProperties flowProperties;
     private final WatchlistPreparationService watchlistPreparationService;
     private final NewsIngestService newsIngestService;
+    private final DisclosureCollectService disclosureCollectService;
     private final AiAnalysisTargetCollector targetCollector;
     private final AiBatchOrchestratorService batchOrchestrator;
 
@@ -51,6 +53,21 @@ public class PreMarketPipelineService {
             }
         }
         result.put("newsArticlesSaved", newsSaved);
+
+        int disclosuresSaved = 0;
+        if (flowProperties.isPreMarketDisclosureCollectEnabled()) {
+            for (AiAnalysisTargetCollector.StockTarget t :
+                    targetCollector.collect(AiBatchPhase.PRE_MARKET)) {
+                try {
+                    disclosuresSaved +=
+                            disclosureCollectService.collectRecent(
+                                    t.stockCode(), flowProperties.getPreMarketDisclosureLookbackDays());
+                } catch (Exception e) {
+                    log.warn("[PRE-MARKET] DART 수집 실패 stock={}: {}", t.stockCode(), e.getMessage());
+                }
+            }
+        }
+        result.put("disclosuresSaved", disclosuresSaved);
 
         int aiProcessed = batchOrchestrator.runPhase(AiBatchPhase.PRE_MARKET);
         result.put("aiJobsProcessed", aiProcessed);

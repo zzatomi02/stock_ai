@@ -23,4 +23,9 @@ public class TradingFlowProperties {
     private int preMarketNewsDisplayPerStock = 5;
 
     private String preMarketNewsQuerySuffix = " 주식";
+
+    /** 장전 파이프라인에서 DART 공시 수집 */
+    private boolean preMarketDisclosureCollectEnabled = true;
+
+    private int preMarketDisclosureLookbackDays = 7;
 }

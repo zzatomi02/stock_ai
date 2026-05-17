@@ -147,6 +147,8 @@ app:
       ingest-triggers-strategy-analysis: true
       pre-market-news-collect-enabled: true
       pre-market-news-display-per-stock: 5
+      pre-market-disclosure-collect-enabled: true
+      pre-market-disclosure-lookback-days: 7
   ai:
     base-url: ${AI_BASE_URL:http://localhost:8001}
     platform:
@@ -165,6 +167,12 @@ app:
     # api-key 는 OPENAI_API_KEY 환경변수 또는 application-secrets.local.yml
     base-url: https://api.openai.com
     analyze-on-ingest: ${OPENAI_ANALYZE_ON_INGEST:false}
+  dart:
+    api-key: ${DART_API_KEY:}
+    enabled: ${DART_ENABLED:true}
+    corp-code-cache-hours: ${DART_CORP_CACHE_HOURS:24}
+    default-lookback-days: ${DART_LOOKBACK_DAYS:7}
+    max-items-per-stock: ${DART_MAX_ITEMS:30}
   naver:
     news:
       client-id: ${NAVER_CLIENT_ID:}

@@ -1,5 +1,8 @@
 package com.noono0.stock.ai.platform.service;
 
+import com.noono0.stock.disclosure.domain.StockDisclosure;
+import com.noono0.stock.disclosure.repository.StockDisclosureRepository;
+import com.noono0.stock.integration.dart.DartCorpCodeService;
 import com.noono0.stock.market.service.MarketMoodService;
 import com.noono0.stock.news.domain.NewsArticle;
 import com.noono0.stock.news.repository.NewsArticleJpaRepository;
@@ -8,6 +11,7 @@ import com.noono0.stock.strategy.service.TradingClockService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +26,7 @@ public class AiAnalysisContextBuilder {
     private final MarketConditionAnalyzer marketConditionAnalyzer;
     private final MarketMoodService marketMoodService;
     private final NewsArticleJpaRepository newsRepository;
+    private final StockDisclosureRepository disclosureRepository;
 
     public Map<String, String> buildCompanyContext(String stockCode, String stockName) {
         Map<String, String> vars = new HashMap<>();
@@ -54,7 +59,33 @@ public class AiAnalysisContextBuilder {
                         : news.stream()
                                 .map(n -> "- " + n.getTitle() + " / " + n.getLlmSentiment())
                                 .collect(Collectors.joining("\n")));
-        vars.put("recentDisclosures", "공시 연동 예정");
+        String normalized =
+                stockCode != null ? DartCorpCodeService.normalizeStockCode(stockCode) : "";
+        LocalDate disclosureSince = tradingClock.today().minusDays(3);
+        List<StockDisclosure> disclosures =
+                normalized.isEmpty()
+                        ? List.of()
+                        : disclosureRepository
+                                .findByStockCodeAndRceptDtGreaterThanEqualOrderByRceptDtDesc(
+                                        normalized, disclosureSince)
+                                .stream()
+                                .limit(8)
+                                .toList();
+        vars.put(
+                "recentDisclosures",
+                disclosures.isEmpty()
+                        ? "최근 공시 없음 (DART 미수집 또는 기간 내 공시 없음)"
+                        : disclosures.stream()
+                                .map(
+                                        d ->
+                                                "- ["
+                                                        + d.getRceptDt()
+                                                        + "] "
+                                                        + d.getReportNm()
+                                                        + (d.getRm() != null && !d.getRm().isBlank()
+                                                                ? " (" + d.getRm() + ")"
+                                                                : ""))
+                                .collect(Collectors.joining("\n")));
         return vars;
     }
 }

@@ -154,16 +154,24 @@ Swagger: http://localhost:8080/swagger-ui.html
 
 ---
 
-## 8. 미구현·스텁
+## 8. DART 공시 수집
 
-- 공시(DART) 수집
+- **설정**: `DART_API_KEY` 또는 `application-secrets.local.yml` → `app.dart.api-key`
+- **장전 파이프라인**: 관심종목별 최근 7일 `list.json` → `stock_disclosure` 저장
+- **AI 컨텍스트**: `AiAnalysisContextBuilder`의 `recentDisclosures` (최근 3일, 최대 8건)
+- **API**: `GET /api/disclosures?stockCode=005930&days=7`, `POST /api/disclosures/collect?stockCode=005930`
+
+---
+
+## 9. 미구현·스텁
+
 - 종가베팅 Fast AI 3초 timeout
 - ingest `SignalEngine` vs `StrategyAnalysisService` 이중 경로
 - 프론트 시그널 상세 UI
 
 ---
 
-## 9. 점수 공식 (BUY)
+## 10. 점수 공식 (BUY)
 
 ```
 finalBuyScore ≈ ruleBased × 0.80 + aiOverall × 0.20 − riskPenalty
