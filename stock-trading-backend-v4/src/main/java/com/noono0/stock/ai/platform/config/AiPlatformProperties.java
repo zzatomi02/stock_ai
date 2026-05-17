@@ -15,4 +15,9 @@ public class AiPlatformProperties {
     /** Rule 점수 비중 (0.80 = AI 20%) */
     private double ruleScoreWeight = 0.80;
     private double aiScoreWeight = 0.20;
+
+    /** 종가베팅(15:10~15:20) 캐시 없을 때 동기 Fast AI */
+    private boolean closingBetFastAiEnabled = true;
+    private int closingBetFastAiTimeoutMs = 3000;
+    private int closingBetFastAiMaxTokens = 800;
 }

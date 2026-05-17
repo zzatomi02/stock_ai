@@ -113,8 +113,12 @@ public record StrategySignalResponseDto(
         m.put("executionLog", executionLog);
         m.put("ruleBasedScore", ruleBasedScore);
         m.put("aiOverallScore", aiOverallScore);
+        m.put("aiBuyScore", aiBuyScore);
+        m.put("aiRiskScore", aiRiskScore);
         m.put("aiBlendedScore", aiBlendedScore);
         m.put("aiDecision", aiDecision);
+        m.put("aiSummary", aiSummary);
+        m.put("aiCompanyAnalysisId", aiCompanyAnalysisId);
         m.put("riskCheckPassed", riskCheckPassed);
         m.put("riskBlockReason", riskBlockReason);
         m.put("createdAt", createdAt);

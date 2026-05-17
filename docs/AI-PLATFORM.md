@@ -9,6 +9,7 @@
 | PRE_MARKET | 08:10~08:55 허용 | 당일 15:30 |
 | INTRADAY_ASYNC | 09:00~15:30 배치만 | +6시간 |
 | CLOSING_CANDIDATE | 14:30~15:10 | 당일 15:30 |
+| CLOSING_BET_FAST | 15:10~15:20 (종가베팅, 캐시 미스) | 당일 15:30, **3초 timeout** |
 | POST_MARKET | 15:40+ | ~7일 |
 | MANUAL | 장외만 | 유형별 |
 | INTRADAY_BLOCKED | **항상 금지** | — |

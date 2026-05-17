@@ -14,8 +14,14 @@ public class TradingFlowProperties {
     private boolean preMarketPipelineEnabled = true;
     private boolean postMarketPipelineEnabled = true;
 
-    /** 뉴스 수집 후 strategy_signal 자동 분석 */
+    /** 뉴스 수집 후 strategy_signal 자동 분석 (권장, 단일 경로) */
     private boolean ingestTriggersStrategyAnalysis = true;
+
+    /**
+     * strategy 분석이 꺼져 있을 때만 trading_signal 생성.
+     * strategy 분석이 켜져 있으면 무시됩니다.
+     */
+    private boolean legacyTradingSignalOnIngest = false;
 
     /** 장전 파이프라인에서 종목별 뉴스 수집 */
     private boolean preMarketNewsCollectEnabled = true;

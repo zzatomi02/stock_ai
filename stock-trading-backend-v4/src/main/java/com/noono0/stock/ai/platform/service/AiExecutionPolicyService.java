@@ -32,6 +32,9 @@ public class AiExecutionPolicyService {
         if (timing == AiExecutionTiming.CLOSING_CANDIDATE) {
             return isClosingWindow();
         }
+        if (timing == AiExecutionTiming.CLOSING_BET_FAST) {
+            return isClosingBetWindow();
+        }
         if (timing == AiExecutionTiming.PRE_MARKET) {
             return isPreMarketWindow();
         }
@@ -82,6 +85,12 @@ public class AiExecutionPolicyService {
     public boolean isClosingWindow() {
         LocalTime t = tradingClock.currentTime();
         return !t.isBefore(LocalTime.of(14, 30)) && t.isBefore(LocalTime.of(15, 10));
+    }
+
+    /** 15:10~15:20 종가베팅 */
+    public boolean isClosingBetWindow() {
+        LocalTime t = tradingClock.currentTime();
+        return !t.isBefore(LocalTime.of(15, 10)) && t.isBefore(LocalTime.of(15, 20));
     }
 
     public boolean isPostMarketWindow() {

@@ -7,7 +7,7 @@ import com.noono0.stock.news.mapper.NewsArticleMapper;
 import com.noono0.stock.news.mapper.NewsKeywordRuleMapper;
 import com.noono0.stock.news.repository.NewsArticleJpaRepository;
 import com.noono0.stock.news.repository.NewsKeywordRepository;
-import com.noono0.stock.signal.service.SignalEngine;
+import com.noono0.stock.tradingflow.service.NewsArticleIngestPipeline;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,7 +23,7 @@ import java.util.List;
 public class NewsScoringService {
     private final NewsKeywordRuleMapper newsKeywordRuleMapper;
     private final NewsArticleMapper newsArticleMapper;
-    private final SignalEngine signalEngine;
+    private final NewsArticleIngestPipeline ingestPipeline;
     private final NewsKeywordService newsKeywordService;
     private final NewsKeywordRepository newsKeywordRepository;
     private final NewsArticleJpaRepository newsArticleJpaRepository;
@@ -123,11 +123,7 @@ public class NewsScoringService {
             var m = newsKeywordService.matchAndSave(article.getId(), stockCode, title, summary);
             article.setKeywordScore(m.keywordScore());
             newsArticleJpaRepository.save(article);
-            try {
-                signalEngine.generateFromArticle(article, SignalEngine.SYSTEM_USER);
-            } catch (Exception e) {
-                log.warn("【SIGNAL】 — {}", e.getMessage());
-            }
+            ingestPipeline.onArticleSaved(article);
             return new NewsArticleScoreDto(
                     article.getId(),
                     stockCode,
@@ -160,11 +156,7 @@ public class NewsScoringService {
         article.setAiScore(50);
         newsArticleMapper.insert(article);
         NewsArticle saved = article;
-        try {
-            signalEngine.generateFromArticle(saved, SignalEngine.SYSTEM_USER);
-        } catch (Exception e) {
-            log.warn("【SIGNAL】 scoreAndSave 후 후보 생성 실패 — {}", e.getMessage());
-        }
+        ingestPipeline.onArticleSaved(saved);
         return new NewsArticleScoreDto(saved.getId(), stockCode, title, finalScore, 50, Math.round((finalScore + 50) / 2f), matched, saved.getPublishedAt());
     }
 }

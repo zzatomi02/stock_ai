@@ -3,9 +3,7 @@ package com.noono0.stock.news.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.noono0.stock.integration.naver.NaverNewsSearchClient;
 import com.noono0.stock.llm.service.LlmNewsIngestEnricher;
-import com.noono0.stock.signal.service.SignalEngine;
-import com.noono0.stock.tradingflow.config.TradingFlowProperties;
-import com.noono0.stock.tradingflow.service.IntradaySignalPipelineService;
+import com.noono0.stock.tradingflow.service.NewsArticleIngestPipeline;
 import com.noono0.stock.news.domain.NewsArticle;
 import com.noono0.stock.news.dto.NewsArticleScoreDto;
 import com.noono0.stock.news.mapper.NewsArticleMapper;
@@ -34,9 +32,7 @@ public class NewsIngestService {
     private final NewsKeywordService newsKeywordService;
     private final NewsKeywordRepository newsKeywordRepository;
     private final LlmNewsIngestEnricher llmNewsIngestEnricher;
-    private final SignalEngine signalEngine;
-    private final TradingFlowProperties flowProperties;
-    private final IntradaySignalPipelineService intradaySignalPipeline;
+    private final NewsArticleIngestPipeline ingestPipeline;
 
     @Transactional
     public int ingest(String query, int display, String defaultStockCode) {
@@ -88,14 +84,7 @@ public class NewsIngestService {
             } catch (Exception e) {
                 log.warn("【LLM-INGEST】 enrich 실패(기사는 저장됨) id={} — {}", a.getId(), e.getMessage());
             }
-            try {
-                signalEngine.generateFromArticle(a, SignalEngine.SYSTEM_USER);
-            } catch (Exception e) {
-                log.warn("【SIGNAL】 ingest 후 후보 생성 실패 id={} — {}", a.getId(), e.getMessage());
-            }
-            if (flowProperties.isIngestTriggersStrategyAnalysis()) {
-                intradaySignalPipeline.onNewsArticleSaved(a);
-            }
+            ingestPipeline.onArticleSaved(a);
             saved++;
         }
         log.info("【NEWS-INGEST】 ★ 수집 완료 ★ 신규 저장 {}건 (전체 items {}개)", saved, items.size());

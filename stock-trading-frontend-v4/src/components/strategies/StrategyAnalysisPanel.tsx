@@ -124,8 +124,11 @@ export function StrategyAnalysisPanel() {
     <section className="card" style={{ marginTop: 12 }}>
       <h2>전략 분석 실행 (16단계 파이프라인)</h2>
       <p style={{ marginTop: 6, color: '#667085', fontSize: 14 }}>
-        목록에는 <strong>adjusted 점수</strong>를 표시합니다. 행을 클릭하면 raw 점수와 시장·시간 가중치 적용
-        과정을 확인할 수 있습니다.
+        목록에는 <strong>adjusted 점수</strong>를 표시합니다. 상세·AI·Risk는{' '}
+        <a href="/strategy-signals" style={{ color: '#1570EF' }}>
+          전략 시그널
+        </a>
+        페이지를 이용하세요.
       </p>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12, alignItems: 'center' }}>
         <input

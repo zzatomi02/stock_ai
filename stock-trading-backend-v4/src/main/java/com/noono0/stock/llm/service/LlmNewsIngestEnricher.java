@@ -10,7 +10,6 @@ import com.noono0.stock.llm.util.LlmMessageTemplateRenderer;
 import com.noono0.stock.llm.util.LlmNewsAnalysisParser;
 import com.noono0.stock.news.domain.NewsArticle;
 import com.noono0.stock.news.repository.NewsArticleJpaRepository;
-import com.noono0.stock.signal.service.SignalEngine;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +31,6 @@ public class LlmNewsIngestEnricher {
     private final AiPromptTemplateService aiPromptTemplateService;
     private final OpenAiChatClient openAiChatClient;
     private final NewsArticleJpaRepository newsArticleJpaRepository;
-    private final SignalEngine signalEngine;
     private final ObjectMapper objectMapper;
 
     /**
@@ -98,11 +96,6 @@ public class LlmNewsIngestEnricher {
         a.setLlmAnalyzedAt(LocalDateTime.now());
         a.setLlmRawResponse(truncate(content, MAX_RAW));
         newsArticleJpaRepository.save(a);
-        try {
-            signalEngine.generateFromArticle(a, SignalEngine.SYSTEM_USER);
-        } catch (Exception e) {
-            log.warn("【SIGNAL】 기사 기반 후보 생성 실패 id={} — {}", a.getId(), e.getMessage());
-        }
         log.warn(
                 "【LLM-INGEST】 ★ enrich 완료 ★ id={} ai_score={} actionHint={} keywordScore={}",
                 a.getId(),

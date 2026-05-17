@@ -44,4 +44,17 @@ class AiExecutionPolicyServiceTest {
                 LocalDateTime.of(2026, 5, 17, 8, 20),
                 () -> assertTrue(policy.isLiveApiCallAllowed(AiExecutionTiming.PRE_MARKET)));
     }
+
+    @Test
+    void closingBetFast_allowedOnlyIn1520Window() {
+        clock.runAt(
+                LocalDateTime.of(2026, 5, 17, 15, 15),
+                () -> {
+                    assertTrue(policy.isClosingBetWindow());
+                    assertTrue(policy.isLiveApiCallAllowed(AiExecutionTiming.CLOSING_BET_FAST));
+                });
+        clock.runAt(
+                LocalDateTime.of(2026, 5, 17, 10, 0),
+                () -> assertFalse(policy.isLiveApiCallAllowed(AiExecutionTiming.CLOSING_BET_FAST)));
+    }
 }

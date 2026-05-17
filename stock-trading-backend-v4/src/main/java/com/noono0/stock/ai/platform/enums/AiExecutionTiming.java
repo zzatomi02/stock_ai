@@ -8,6 +8,8 @@ public enum AiExecutionTiming {
     INTRADAY_ASYNC,
     /** 14:30~15:10 종가 후보 */
     CLOSING_CANDIDATE,
+    /** 15:10~15:20 종가베팅 — 캐시 미스 시 Fast AI (3초 제한) */
+    CLOSING_BET_FAST,
     /** 15:40+ 장마감 심층 */
     POST_MARKET,
     OFF_HOURS,

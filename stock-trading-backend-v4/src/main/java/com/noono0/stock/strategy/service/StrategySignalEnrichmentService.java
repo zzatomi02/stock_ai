@@ -1,6 +1,7 @@
 package com.noono0.stock.strategy.service;
 
 import com.noono0.stock.ai.platform.service.AiScoreBlendService;
+import com.noono0.stock.ai.platform.service.ClosingBetFastAiService;
 import com.noono0.stock.ai.platform.service.CachedAiAnalysisQueryService;
 import com.noono0.stock.strategy.domain.StrategySignal;
 import com.noono0.stock.strategy.dto.StrategyComponentScores;
@@ -21,6 +22,7 @@ public class StrategySignalEnrichmentService {
 
     private final AiScoreBlendService aiScoreBlendService;
     private final CachedAiAnalysisQueryService cachedAiQuery;
+    private final ClosingBetFastAiService closingBetFastAiService;
     private final StrategySignalRiskGateService riskGate;
 
     public record EnrichmentResult(
@@ -42,6 +44,9 @@ public class StrategySignalEnrichmentService {
         var risk = riskGate.check(sig.getStockCode(), sig.getStrategyCode(), side);
         sig.setRiskCheckPassed(risk.passed());
         sig.setRiskBlockReason(risk.blockReason());
+
+        closingBetFastAiService.tryRefreshCacheIfNeeded(
+                sig.getStockCode(), sig.getStockName(), sig.getStrategyCode());
 
         var blend = aiScoreBlendService.blend(ruleBased, sig.getStockCode(), sig.getStrategyCode());
         sig.setAiOverallScore(bd(blend.aiOverallScore()));

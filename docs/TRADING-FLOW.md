@@ -163,11 +163,11 @@ Swagger: http://localhost:8080/swagger-ui.html
 
 ---
 
-## 9. 미구현·스텁
+## 9. 최근 구현
 
-- 종가베팅 Fast AI 3초 timeout
-- ingest `SignalEngine` vs `StrategyAnalysisService` 이중 경로
-- 프론트 시그널 상세 UI
+- **종가베팅 Fast AI**: 15:10~15:20, `CLOSING_BET` + 캐시 없음 → OpenAI 동기 호출(기본 3초, `app.ai.platform.closing-bet-fast-ai-timeout-ms`)
+- **뉴스 ingest 단일 경로**: `NewsArticleIngestPipeline` → `strategy_signal` (레거시 `trading_signal`은 `legacy-trading-signal-on-ingest: true` 시만)
+- **프론트**: `/strategy-signals` — CANDIDATE/REJECTED/EXCLUDED 탭, AI·Risk 상세
 
 ---
 

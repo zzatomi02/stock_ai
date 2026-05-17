@@ -145,6 +145,7 @@ app:
       pre-market-pipeline-enabled: true
       post-market-pipeline-enabled: true
       ingest-triggers-strategy-analysis: true
+      legacy-trading-signal-on-ingest: false
       pre-market-news-collect-enabled: true
       pre-market-news-display-per-stock: 5
       pre-market-disclosure-collect-enabled: true
@@ -157,6 +158,8 @@ app:
       batch-max-stocks-per-tick: 8
       rule-score-weight: 0.80
       ai-score-weight: 0.20
+      closing-bet-fast-ai-enabled: true
+      closing-bet-fast-ai-timeout-ms: 3000
       default-openai-model: ${AI_DEFAULT_MODEL:gpt-4o-mini}
       intraday-interval-ms: ${AI_INTRADAY_INTERVAL_MS:180000}
       closing-interval-ms: ${AI_CLOSING_INTERVAL_MS:300000}

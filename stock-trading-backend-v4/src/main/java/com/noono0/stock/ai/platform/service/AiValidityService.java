@@ -25,7 +25,7 @@ public class AiValidityService {
         return switch (timing) {
             case PRE_MARKET -> new ValidityWindow(now, today.atTime(15, 30));
             case INTRADAY_ASYNC -> new ValidityWindow(now, now.plusHours(6));
-            case CLOSING_CANDIDATE -> new ValidityWindow(now, today.atTime(15, 30));
+            case CLOSING_CANDIDATE, CLOSING_BET_FAST -> new ValidityWindow(now, today.atTime(15, 30));
             case POST_MARKET -> new ValidityWindow(now, today.plusDays(7).atTime(23, 59));
             case MANUAL, OFF_HOURS -> windowForType(analysisType, now);
             default -> new ValidityWindow(now, now.plusHours(1));
