@@ -6,11 +6,10 @@ GitHub: [zzatomi02/stock_ai](https://github.com/zzatomi02/stock_ai)
 
 | 문서 | 내용 |
 |------|------|
-| [docs/README.md](./docs/README.md) | 문서 목록·보는 방법 |
 | [docs/GETTING-STARTED.md](./docs/GETTING-STARTED.md) | Docker / 로컬 실행 |
 | [docs/TRADING-FLOW.md](./docs/TRADING-FLOW.md) | 장전·장중·장마감 파이프라인 |
 | [docs/AI-PLATFORM.md](./docs/AI-PLATFORM.md) | AI 배치·캐시·API |
-| [docs/GIT.md](./docs/GIT.md) | GitHub 계정 (`zzatomi02`) |
+
 
 ## 프로젝트
 
