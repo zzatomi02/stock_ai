@@ -7,8 +7,8 @@ import com.noono0.stock.tradingflow.service.NewsArticleIngestPipeline;
 import com.noono0.stock.news.domain.NewsArticle;
 import com.noono0.stock.news.dto.NewsArticleScoreDto;
 import com.noono0.stock.news.mapper.NewsArticleMapper;
-import com.noono0.stock.news.repository.NewsKeywordRepository;
-import com.noono0.stock.news.service.NewsKeywordService;
+import com.noono0.stock.news.repository.NewsSentimentKeywordRepository;
+import com.noono0.stock.news.service.NewsSentimentKeywordService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,8 +29,8 @@ public class NewsIngestService {
     private final NaverNewsSearchClient naverNewsSearchClient;
     private final NewsArticleMapper newsArticleMapper;
     private final NewsScoringService newsScoringService;
-    private final NewsKeywordService newsKeywordService;
-    private final NewsKeywordRepository newsKeywordRepository;
+    private final NewsSentimentKeywordService newsKeywordService;
+    private final NewsSentimentKeywordRepository newsKeywordRepository;
     private final LlmNewsIngestEnricher llmNewsIngestEnricher;
     private final NewsArticleIngestPipeline ingestPipeline;
 

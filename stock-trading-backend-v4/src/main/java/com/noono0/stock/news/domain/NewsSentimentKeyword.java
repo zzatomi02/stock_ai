@@ -6,11 +6,12 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
+/** 기사 제목·요약 감성/리스크 매칭용 키워드 (네이버 검색 키워드와 별도) */
 @Entity
-@Table(name = "news_keyword")
+@Table(name = "news_sentiment_keyword")
 @Getter
 @Setter
-public class NewsKeyword {
+public class NewsSentimentKeyword {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

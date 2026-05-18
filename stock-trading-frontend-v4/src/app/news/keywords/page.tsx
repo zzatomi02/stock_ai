@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { AppShell } from '@/components/layout/AppShell'
-import { apiDelete, apiGet, apiPost, apiPut } from '@/lib/api'
+import { apiDelete, apiGet, apiPost } from '@/lib/api'
 
 type Keyword = {
   id: number

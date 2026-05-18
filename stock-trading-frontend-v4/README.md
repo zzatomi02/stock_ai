@@ -6,7 +6,8 @@ Next.js 15 · React · pnpm
 
 ## 먼저 읽을 문서
 
-**[../docs/USAGE-GUIDE.md](../docs/USAGE-GUIDE.md)** — 화면별 설명, 실행 방법, 문제 해결
+**[../docs/USAGE-GUIDE.md](../docs/USAGE-GUIDE.md)** — 화면별 설명, 실행 방법, 문제 해결  
+**[../docs/API-AUDIT.md](../docs/API-AUDIT.md)** — 프론트·백엔드 API 대조 (불일치·미연결 목록)
 
 ---
 

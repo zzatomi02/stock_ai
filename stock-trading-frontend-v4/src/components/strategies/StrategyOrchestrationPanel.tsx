@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { apiGet } from '@/lib/api'
+import { apiGet, apiPatch, apiPut } from '@/lib/api'
 
 type Snapshot = {
   evaluatedAt: string
@@ -29,30 +29,6 @@ type Snapshot = {
   }>
 }
 
-async function apiMutate(method: string, path: string) {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  const tm = document.cookie.match(/(?:^|; )trading-mode=([^;]*)/)?.[1]
-  if (tm === 'real' || tm === 'paper') headers['X-Trading-Mode'] = tm
-  const userId = document.cookie.match(/(?:^|; )user-id=([^;]*)/)?.[1]
-  if (userId) headers['X-User-Id'] = decodeURIComponent(userId).trim()
-
-  const res = await fetch(`/api/proxy${path.startsWith('/') ? path : `/${path}`}`, {
-    method,
-    headers,
-  })
-  const text = await res.text()
-  if (!res.ok) {
-    let detail = ''
-    try {
-      const j = JSON.parse(text) as { message?: string }
-      if (j?.message) detail = `: ${j.message}`
-    } catch {
-      /* ignore */
-    }
-    throw new Error(`API HTTP ${res.status}${detail}`)
-  }
-}
-
 export function StrategyOrchestrationPanel() {
   const [snap, setSnap] = useState<Snapshot | null>(null)
   const [loading, setLoading] = useState(false)
@@ -78,7 +54,7 @@ export function StrategyOrchestrationPanel() {
   async function toggleBase(code: string, enabled: boolean) {
     setLoading(true)
     try {
-      await apiMutate('PATCH', `/strategies/orchestration/${code}/enabled?enabled=${enabled}`)
+      await apiPatch(`/strategies/orchestration/${code}/enabled?enabled=${enabled}`)
       await load()
       setMsg(`${code} 기본 ${enabled ? 'ON' : 'OFF'}`)
     } catch (e) {
@@ -91,7 +67,7 @@ export function StrategyOrchestrationPanel() {
   async function toggleToday(code: string, enabled: boolean) {
     setLoading(true)
     try {
-      await apiMutate('PUT', `/strategies/orchestration/${code}/today?enabled=${enabled}`)
+      await apiPut(`/strategies/orchestration/${code}/today?enabled=${enabled}`, {})
       await load()
       setMsg(`${code} 오늘만 ${enabled ? 'ON' : 'OFF'}`)
     } catch (e) {

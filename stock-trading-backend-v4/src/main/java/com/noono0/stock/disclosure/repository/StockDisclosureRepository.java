@@ -9,6 +9,8 @@ import java.util.List;
 public interface StockDisclosureRepository extends JpaRepository<StockDisclosure, Long> {
     boolean existsByRceptNo(String rceptNo);
 
+    boolean existsByDuplicateHash(String duplicateHash);
+
     List<StockDisclosure> findByStockCodeAndRceptDtGreaterThanEqualOrderByRceptDtDesc(
             String stockCode, LocalDate since);
 }

@@ -6,7 +6,7 @@ import com.noono0.stock.news.dto.NewsArticleScoreDto;
 import com.noono0.stock.news.mapper.NewsArticleMapper;
 import com.noono0.stock.news.mapper.NewsKeywordRuleMapper;
 import com.noono0.stock.news.repository.NewsArticleJpaRepository;
-import com.noono0.stock.news.repository.NewsKeywordRepository;
+import com.noono0.stock.news.repository.NewsSentimentKeywordRepository;
 import com.noono0.stock.tradingflow.service.NewsArticleIngestPipeline;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,8 +24,8 @@ public class NewsScoringService {
     private final NewsKeywordRuleMapper newsKeywordRuleMapper;
     private final NewsArticleMapper newsArticleMapper;
     private final NewsArticleIngestPipeline ingestPipeline;
-    private final NewsKeywordService newsKeywordService;
-    private final NewsKeywordRepository newsKeywordRepository;
+    private final NewsSentimentKeywordService newsKeywordService;
+    private final NewsSentimentKeywordRepository newsKeywordRepository;
     private final NewsArticleJpaRepository newsArticleJpaRepository;
 
     public List<NewsKeywordRule> getRules() {

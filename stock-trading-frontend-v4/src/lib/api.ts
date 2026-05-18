@@ -195,6 +195,42 @@ export async function apiPost<T>(
   }
 }
 
+export async function apiPatch<T>(
+  path: string,
+  body: unknown = {},
+  schema?: z.ZodType<T>,
+  opts?: { tradingMode?: 'paper' | 'real' }
+): Promise<T> {
+  if (typeof window === 'undefined') noStore()
+  const url = joinUrl(path)
+  const res = await fetchWithStartupRetry(url, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(await tradingModeHeaders(opts?.tradingMode)),
+    },
+    body: JSON.stringify(body),
+  })
+  const text = await res.text()
+  if (!res.ok) {
+    let detail = ''
+    try {
+      const j = JSON.parse(text) as { message?: string }
+      if (j?.message) detail = `: ${j.message}`
+    } catch {
+      /* ignore */
+    }
+    throw new Error(`API HTTP ${res.status}: ${url}${detail}`)
+  }
+  if (!text) return undefined as T
+  try {
+    return parseApiData<T>(text, schema)
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    throw new Error(`API 응답 형식이 올바르지 않습니다 (HTTP ${res.status}): ${msg}`)
+  }
+}
+
 export async function apiPut<T>(
   path: string,
   body: unknown,

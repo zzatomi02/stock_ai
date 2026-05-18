@@ -20,10 +20,17 @@ public class NaverNewsSearchClient {
     private final ObjectMapper objectMapper;
 
     public JsonNode search(String query, int display) {
+        String sort = StringUtils.hasText(props.getSort()) ? props.getSort() : "date";
+        return search(query, display, sort);
+    }
+
+    public JsonNode search(String query, int display, String sort) {
         if (!StringUtils.hasText(props.getClientId()) || !StringUtils.hasText(props.getClientSecret())) {
             throw new IllegalStateException("NAVER_CLIENT_ID / NAVER_CLIENT_SECRET 미설정");
         }
-        String sort = StringUtils.hasText(props.getSort()) ? props.getSort() : "date";
+        if (!StringUtils.hasText(sort)) {
+            sort = StringUtils.hasText(props.getSort()) ? props.getSort() : "date";
+        }
         log.info("【NAVER-NEWS】 API 호출 준비 query={} display={} sort={}", query, display, sort);
         // build(true)는 이미 인코딩된 값 전용 — 한글 등은 build()로 인코딩되게 함
         String url =

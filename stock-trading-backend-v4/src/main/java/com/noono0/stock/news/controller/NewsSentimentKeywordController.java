@@ -1,8 +1,8 @@
 package com.noono0.stock.news.controller;
 
 import com.noono0.stock.common.api.ApiResponse;
-import com.noono0.stock.news.domain.NewsKeyword;
-import com.noono0.stock.news.service.NewsKeywordService;
+import com.noono0.stock.news.domain.NewsSentimentKeyword;
+import com.noono0.stock.news.service.NewsSentimentKeywordService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,18 +10,18 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/news/keywords")
+@RequestMapping({"/api/news/sentiment-keywords", "/api/news/keywords"})
 @RequiredArgsConstructor
-public class NewsKeywordController {
-    private final NewsKeywordService keywordService;
+public class NewsSentimentKeywordController {
+    private final NewsSentimentKeywordService keywordService;
 
     @GetMapping
-    public ApiResponse<List<NewsKeyword>> list() {
+    public ApiResponse<List<NewsSentimentKeyword>> list() {
         return ApiResponse.ok(keywordService.listActive());
     }
 
     @PostMapping
-    public ApiResponse<NewsKeyword> create(@RequestBody Map<String, Object> body) {
+    public ApiResponse<NewsSentimentKeyword> create(@RequestBody Map<String, Object> body) {
         return ApiResponse.ok(
                 keywordService.create(
                         String.valueOf(body.get("keyword")),
@@ -32,7 +32,7 @@ public class NewsKeywordController {
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<NewsKeyword> update(@PathVariable("id") long id, @RequestBody Map<String, Object> body) {
+    public ApiResponse<NewsSentimentKeyword> update(@PathVariable("id") long id, @RequestBody Map<String, Object> body) {
         return ApiResponse.ok(
                 keywordService.update(
                         id,

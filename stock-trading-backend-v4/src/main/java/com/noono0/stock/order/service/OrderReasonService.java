@@ -1,7 +1,7 @@
 package com.noono0.stock.order.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.noono0.stock.news.service.NewsKeywordService;
+import com.noono0.stock.news.service.NewsSentimentKeywordService;
 import com.noono0.stock.order.domain.OrderReason;
 import com.noono0.stock.order.repository.OrderReasonRepository;
 import com.noono0.stock.signal.domain.TradingSignal;
@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 public class OrderReasonService {
     private final OrderReasonRepository repository;
     private final ObjectMapper objectMapper;
-    private final NewsKeywordService newsKeywordService;
+    private final NewsSentimentKeywordService newsKeywordService;
 
     @Transactional
     public OrderReason saveForSignal(TradingSignal signal, String reasonType) {

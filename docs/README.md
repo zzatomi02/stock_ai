@@ -9,6 +9,7 @@
 | 하루에 뭐가 자동으로 도는지 알고 싶다 | [USAGE-GUIDE.md §6](./USAGE-GUIDE.md#6-하루에-자동으로-돌아가는-것) |
 | AI를 언제 쓰는지 / 안 쓰는지 | [USAGE-GUIDE.md §1](./USAGE-GUIDE.md#1-이게-뭔가요) · [AI-PLATFORM.md](./AI-PLATFORM.md) |
 | API·DB·클래스 이름이 필요하다 | [TRADING-FLOW.md](./TRADING-FLOW.md) · [AI-PLATFORM.md](./AI-PLATFORM.md) |
+| 프론트·백엔드 API가 맞는지 확인 | [API-AUDIT.md](./API-AUDIT.md) |
 | GitHub에 올리기 | [GIT.md](./GIT.md) |
 
 ---
@@ -22,6 +23,7 @@
 | [TRADING-FLOW.md](./TRADING-FLOW.md) | 트레이딩 파이프라인 (기술 상세) |
 | [AI-PLATFORM.md](./AI-PLATFORM.md) | AI 배치·캐시 (기술 상세) |
 | [GIT.md](./GIT.md) | Git 계정·원격 저장소 |
+| [API-AUDIT.md](./API-AUDIT.md) | 프론트 ↔ 백엔드 API 대조·미사용 목록 |
 
 ---
 

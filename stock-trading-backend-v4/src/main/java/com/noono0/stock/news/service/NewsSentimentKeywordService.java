@@ -1,24 +1,22 @@
 package com.noono0.stock.news.service;
 
-import com.noono0.stock.news.domain.NewsKeyword;
 import com.noono0.stock.news.domain.NewsKeywordMatch;
+import com.noono0.stock.news.domain.NewsSentimentKeyword;
 import com.noono0.stock.news.repository.NewsKeywordMatchRepository;
-import com.noono0.stock.news.repository.NewsKeywordRepository;
+import com.noono0.stock.news.repository.NewsSentimentKeywordRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class NewsKeywordService {
-    private final NewsKeywordRepository keywordRepository;
+public class NewsSentimentKeywordService {
+    private final NewsSentimentKeywordRepository keywordRepository;
     private final NewsKeywordMatchRepository matchRepository;
 
     public record MatchResult(
@@ -30,17 +28,18 @@ public class NewsKeywordService {
             List<String> negativeKeywords,
             List<String> riskKeywords) {}
 
-    public List<NewsKeyword> listAll() {
+    public List<NewsSentimentKeyword> listAll() {
         return keywordRepository.findAll();
     }
 
-    public List<NewsKeyword> listActive() {
+    public List<NewsSentimentKeyword> listActive() {
         return keywordRepository.findByIsActiveTrueOrderByKeywordTypeAscKeywordAsc();
     }
 
     @Transactional
-    public NewsKeyword create(String keyword, String keywordType, String category, Integer weight, String description) {
-        NewsKeyword k = new NewsKeyword();
+    public NewsSentimentKeyword create(
+            String keyword, String keywordType, String category, Integer weight, String description) {
+        NewsSentimentKeyword k = new NewsSentimentKeyword();
         k.setKeyword(keyword.trim());
         k.setKeywordType(keywordType.toUpperCase());
         k.setCategory(category);
@@ -51,9 +50,16 @@ public class NewsKeywordService {
     }
 
     @Transactional
-    public NewsKeyword update(
-            long id, String keyword, String keywordType, String category, Integer weight, String description, Boolean active) {
-        NewsKeyword k = keywordRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("키워드 없음"));
+    public NewsSentimentKeyword update(
+            long id,
+            String keyword,
+            String keywordType,
+            String category,
+            Integer weight,
+            String description,
+            Boolean active) {
+        NewsSentimentKeyword k =
+                keywordRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("키워드 없음"));
         if (keyword != null) k.setKeyword(keyword.trim());
         if (keywordType != null) k.setKeywordType(keywordType.toUpperCase());
         if (category != null) k.setCategory(category);
@@ -68,11 +74,10 @@ public class NewsKeywordService {
         keywordRepository.deleteById(id);
     }
 
-  /** 키워드 매칭 + 이력 저장 */
     @Transactional
     public MatchResult matchAndSave(Long articleId, String stockCode, String title, String summary) {
         String source = ((title != null ? title : "") + " " + (summary != null ? summary : "")).toLowerCase();
-        List<NewsKeyword> rules = keywordRepository.findByIsActiveTrueOrderByKeywordTypeAscKeywordAsc();
+        List<NewsSentimentKeyword> rules = keywordRepository.findByIsActiveTrueOrderByKeywordTypeAscKeywordAsc();
         int positive = 0;
         int negative = 0;
         int risk = 0;
@@ -80,7 +85,7 @@ public class NewsKeywordService {
         List<String> negKw = new ArrayList<>();
         List<String> riskKw = new ArrayList<>();
 
-        for (NewsKeyword rule : rules) {
+        for (NewsSentimentKeyword rule : rules) {
             if (!source.contains(rule.getKeyword().toLowerCase())) {
                 continue;
             }

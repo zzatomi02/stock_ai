@@ -108,6 +108,12 @@ app:
     collect-enabled: ${NEWS_COLLECT_ENABLED:false}
     collect-query: "코스피"
     collect-cron: "0 0 */3 * * *"
+  collect:
+    news-search-enabled: ${NEWS_SEARCH_COLLECT_ENABLED:false}
+    news-search-fixed-delay-ms: ${NEWS_SEARCH_COLLECT_DELAY_MS:60000}
+    kind-rss-enabled: ${KIND_RSS_COLLECT_ENABLED:false}
+    kind-rss-cron: "0 */30 * * * *"
+    kind-rss-url: ${KIND_RSS_URL:https://kind.krx.co.kr/rss/disclosureSearch.rss}
   backtest:
     enabled: true
   risk:

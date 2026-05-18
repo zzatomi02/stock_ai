@@ -3,6 +3,7 @@ package com.noono0.stock.disclosure.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.noono0.stock.disclosure.domain.StockDisclosure;
 import com.noono0.stock.disclosure.repository.StockDisclosureRepository;
+import com.noono0.stock.collect.util.DisclosureDuplicateHashUtil;
 import com.noono0.stock.integration.dart.DartCorpCodeService;
 import com.noono0.stock.integration.dart.DartOpenApiClient;
 import com.noono0.stock.integration.dart.config.DartProperties;
@@ -83,7 +84,14 @@ public class DisclosureCollectService {
 
     private boolean persistIfNew(String stockCode, String corpCode, JsonNode item) {
         String rceptNo = item.path("rcept_no").asText("");
-        if (!StringUtils.hasText(rceptNo) || repository.existsByRceptNo(rceptNo)) {
+        if (!StringUtils.hasText(rceptNo)) {
+            return false;
+        }
+        if (repository.existsByRceptNo(rceptNo)) {
+            return false;
+        }
+        String dupHash = DisclosureDuplicateHashUtil.hash("DART", rceptNo, null, null);
+        if (repository.existsByDuplicateHash(dupHash)) {
             return false;
         }
         String rceptDtStr = item.path("rcept_dt").asText("");
@@ -94,13 +102,18 @@ public class DisclosureCollectService {
             rceptDt = tradingClock.today();
         }
         StockDisclosure row = new StockDisclosure();
+        row.setProvider("DART");
         row.setStockCode(stockCode);
         row.setCorpCode(corpCode);
         row.setRceptNo(rceptNo);
         row.setReportNm(item.path("report_nm").asText("").trim());
+        row.setDisclosureType(item.path("report_nm").asText("").trim());
         row.setRceptDt(rceptDt);
+        row.setSubmittedAt(rceptDt.atStartOfDay());
         row.setFlrNm(item.path("flr_nm").asText(null));
         row.setRm(item.path("rm").asText(null));
+        row.setOriginalUrl("https://dart.fss.or.kr/dsaf001/main.do?rcpNo=" + rceptNo);
+        row.setDuplicateHash(dupHash);
         row.setCollectedAt(LocalDateTime.now());
         repository.save(row);
         return true;
