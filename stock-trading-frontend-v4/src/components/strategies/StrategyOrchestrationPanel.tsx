@@ -30,9 +30,15 @@ type Snapshot = {
 }
 
 async function apiMutate(method: string, path: string) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  const tm = document.cookie.match(/(?:^|; )trading-mode=([^;]*)/)?.[1]
+  if (tm === 'real' || tm === 'paper') headers['X-Trading-Mode'] = tm
+  const userId = document.cookie.match(/(?:^|; )user-id=([^;]*)/)?.[1]
+  if (userId) headers['X-User-Id'] = decodeURIComponent(userId).trim()
+
   const res = await fetch(`/api/proxy${path.startsWith('/') ? path : `/${path}`}`, {
     method,
-    headers: { 'Content-Type': 'application/json' },
+    headers,
   })
   const text = await res.text()
   if (!res.ok) {

@@ -2,6 +2,9 @@
 
 FastAPI 기반 AI 보조 서비스입니다. 백엔드에서 `AI_BASE_URL`(기본 `http://localhost:8001`)로 프록시 호출합니다.
 
+**전체 사용 설명** → [../docs/USAGE-GUIDE.md](../docs/USAGE-GUIDE.md)  
+(대부분의 AI 기업 분석은 백엔드가 OpenAI를 직접 호출합니다. 이 서비스는 선택 사항입니다.)
+
 ## 사용 기술
 
 - Python 3.12+

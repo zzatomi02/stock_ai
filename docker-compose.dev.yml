@@ -120,7 +120,7 @@ services:
       INTERNAL_API_BASE_URL: http://backend:8080/api
       BACKEND_BASIC_USERNAME: "${BACKEND_BASIC_USERNAME:-ops}"
       BACKEND_BASIC_PASSWORD: "${BACKEND_BASIC_PASSWORD:-local-dev-password}"
-      PROXY_ALLOWED_PREFIXES: "${PROXY_ALLOWED_PREFIXES:-auth,market,dashboard,strategies,strategy,news,statistics,backtest,ai,broker,ops,signals,watchlist,risk,llm,orders}"
+      PROXY_ALLOWED_PREFIXES: "${PROXY_ALLOWED_PREFIXES:-auth,market,dashboard,strategies,strategy,strategy-settings,strategy-runtime-settings,strategy-time-windows,strategy-config-changes,market-condition-strategies,news,statistics,backtest,ai,broker,ops,signals,watchlist,risk,llm,orders,trading-flow,disclosures}"
     depends_on:
       backend:
         condition: service_healthy

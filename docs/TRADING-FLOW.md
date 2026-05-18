@@ -1,70 +1,44 @@
-# 트레이딩 일일 흐름 — 사용·개발 설명서
+# 트레이딩 일일 흐름
 
-> **대상**: stock 모노레포 (`stock-trading-backend-v4` 중심)  
-> **핵심 원칙**: 장중 빠른 매수 판단에는 AI API 호출 없음 → Rule + Risk + DB 캐시만 사용
+> **쉬운 설명** → [USAGE-GUIDE.md](./USAGE-GUIDE.md)  
+> 이 문서는 API·설정·DB를 조금 더 자세히 적은 **기술용** 보조 자료입니다.
 
 ---
 
-## 1. 전체 구조
+## 핵심 원칙 (한 줄)
 
-| 프로젝트 | 경로 | 역할 |
-|---------|------|------|
-| 백엔드 | `stock-trading-backend-v4/` | 전략·리스크·뉴스·AI·스케줄·DB |
-| 프론트 | `stock-trading-frontend-v4/` | UI (AI 분석·시장·전략 등) |
-| AI 서비스 | `stock-trading-ai-service-v4/` | (선택) 외부 AI 프록시 — `app.ai.base-url` |
+**장중 “지금 살까?”** → AI API 호출 **금지**, DB에 저장된 AI + 규칙 + 리스크만 사용.
+
+---
+
+## 하루 타임라인
+
+| 시간 | 하는 일 |
+|------|--------|
+| 08:10~08:55 | 장전: 관심종목 → 뉴스·DART 공시 → AI 분석 저장 |
+| 09:00~15:30 | 장중: 뉴스 들어오면 전략 시그널 생성 (빠른 경로, API 없음) + 3분마다 AI 배치(비동기) |
+| 14:30~15:10 | 종가 후보 AI |
+| 15:10~15:20 | 종가베팅: 캐시 없으면 Fast AI (최대 3초) |
+| 15:40~ | 장마감: 복기·전략 제안·익일 관심종목 |
+
+---
+
+## 뉴스 → 시그널 흐름
 
 ```
-[배치] 장전/장중비동기/종가/장마감 → AI API → ai_company_analysis
-[장중] 뉴스·신호 → Rule → Risk → AI 캐시 조회 → strategy_signal
-[주문] RiskManagementEngine (실제 매수 직전)
+뉴스 수집 (네이버)
+  → (선택) OpenAI 기사 분석
+  → NewsArticleIngestPipeline (단일 진입)
+  → 전략별 StrategyAnalysisService
+  → strategy_signal 저장
+  → 프론트 /strategy-signals
 ```
 
----
-
-## 2. 하루 타임라인
-
-| 시간 | 자동 스케줄 | 하는 일 |
-|------|-------------|---------|
-| 08:10~08:55 | `AiScheduledBatchService.preMarketBatch` | 관심종목 → 뉴스 수집 → AI 장전 분석 |
-| 09:00~15:30 | `intradayAsyncBatch` (3분) | 신규 뉴스·미분석 시그널 AI (비동기) |
-| 14:30~15:10 | `closingCandidateBatch` | 종가 후보 AI |
-| 15:40+ | `postMarketBatch` | 심층 AI → 복기 → 전략 추천 → 익일 관심종목 |
-
-뉴스 ingest 시 **즉시** `IntradaySignalPipelineService` → `strategy_signal` (API 호출 없음).
+레거시 `trading_signal` 은 `legacy-trading-signal-on-ingest: true` 일 때만.
 
 ---
 
-## 3. 패키지 맵 (백엔드)
-
-### `com.noono0.stock.tradingflow`
-
-| 클래스 | 역할 |
-|--------|------|
-| `PreMarketPipelineService` | 장전 E2E |
-| `PostMarketPipelineService` | 장마감 E2E |
-| `IntradaySignalPipelineService` | 뉴스 → 전략 분석 |
-| `WatchlistPreparationService` | 시그널 → `user_watchlist` (system) |
-| `AiTradeReviewService` | `ai_trade_review` |
-| `StrategyImprovementService` | `strategy_improvement_recommendation` |
-| `TradingFlowController` | 수동 실행 API |
-
-### `com.noono0.stock.ai.platform`
-
-배치·Job·Provider·캐시·유효기간·중복방지·fallback·비용 로그.  
-상세는 [AI-PLATFORM.md](./AI-PLATFORM.md).
-
-### `com.noono0.stock.strategy`
-
-| 클래스 | 역할 |
-|--------|------|
-| `StrategyDecisionEngine` | 전략 활성·점수·최종 신호 |
-| `StrategyAnalysisService` | 기사별 분석 → DB 저장 |
-| `StrategySignalEnrichmentService` | Rule+Risk+AI → signal 컬럼 |
-| `StrategySignalRiskGateService` | 시그널 단계 리스크 |
-
----
-
-## 4. 수동 실행 API
+## 수동 실행 API
 
 ```http
 POST /api/trading-flow/pre-market/run
@@ -73,110 +47,78 @@ GET  /api/trading-flow/ai-provider-performance?days=7
 ```
 
 ```http
-GET  /api/ai/company-analysis/today
-GET  /api/ai/company-analysis/{stockCode}
-POST /api/ai/analysis/request
-```
-
-```http
+GET  /api/strategy/analysis/signals?status=CANDIDATE
+GET  /api/strategy/analysis/signals/{id}
 POST /api/strategy/analysis/article/{articleId}
-GET  /api/strategy/analysis/signals?tradeDate=YYYY-MM-DD&status=CANDIDATE
 ```
 
 ```http
-GET/POST/DELETE /api/watchlist
-Header: X-User-Id: system
+GET  /api/disclosures?stockCode=005930&days=7
+POST /api/disclosures/collect?stockCode=005930
 ```
 
-전략 설정 **승인 후 반영**:
-
 ```http
-POST /api/strategy-runtime-settings?requireApproval=true
-GET  /api/strategy-config-changes/pending
-PUT  /api/strategy-config-changes/{id}/approve
-PUT  /api/strategy-config-changes/{id}/reject
+GET  /api/strategies/enabled-now
+GET  /api/ai/company-analysis/today
 ```
 
 ---
 
-## 5. 설정
-
-백엔드 `stock-trading-backend-v4/src/main/resources/application-local.yml`:
+## 주요 설정 (`application-local.yml`)
 
 ```yaml
 app:
   trading:
     flow:
-      system-user-id: system
       pre-market-pipeline-enabled: true
       post-market-pipeline-enabled: true
-      ingest-triggers-strategy-analysis: true
-      pre-market-news-collect-enabled: true
+      ingest-triggers-strategy-analysis: true   # 뉴스 → strategy_signal
+      legacy-trading-signal-on-ingest: false    # 예전 trading_signal
+      pre-market-disclosure-collect-enabled: true
   ai:
     platform:
       batch-enabled: true
       rule-score-weight: 0.80
       ai-score-weight: 0.20
-      intraday-interval-ms: 180000
+      closing-bet-fast-ai-enabled: true
+      closing-bet-fast-ai-timeout-ms: 3000
+  dart:
+    api-key: ${DART_API_KEY:}
 ```
 
-API Key는 DB에 저장하지 않음 → 환경 변수 (`OPENAI_API_KEY` 등).
-
 ---
 
-## 6. 로컬 첫 실행 체크리스트
-
-1. MySQL + 백엔드 `mvn spring-boot:run` (profile `local`)
-2. `OPENAI_API_KEY` (실제 AI 호출 시)
-3. `POST /api/watchlist` + `X-User-Id: system`
-4. `POST /api/trading-flow/pre-market/run`
-5. `GET /api/ai/company-analysis/today`
-6. 뉴스 수집 또는 `POST /api/strategy/analysis/article/{id}`
-7. `GET /api/strategy/analysis/signals`
-8. `POST /api/trading-flow/post-market/run`
-
-Swagger: http://localhost:8080/swagger-ui.html
-
----
-
-## 7. 주요 DB 테이블
-
-| 테이블 | 용도 |
-|--------|------|
-| `strategy_signal` | 전략 분석 + AI·리스크 스냅샷 |
-| `ai_company_analysis` | 기업 분석 (`valid_from` / `valid_until`) |
-| `ai_analysis_job` | 배치 작업 (`input_hash` 중복 방지) |
-| `ai_usage_log` | 토큰·비용 |
-| `ai_trade_review` | 장마감 복기 (영구) |
-| `strategy_improvement_recommendation` | 전략 개선 제안 |
-| `strategy_config_change_request` | 설정 변경 승인 |
-| `user_watchlist` | 관심종목 |
-
----
-
-## 8. DART 공시 수집
-
-- **설정**: `DART_API_KEY` 또는 `application-secrets.local.yml` → `app.dart.api-key`
-- **장전 파이프라인**: 관심종목별 최근 7일 `list.json` → `stock_disclosure` 저장
-- **AI 컨텍스트**: `AiAnalysisContextBuilder`의 `recentDisclosures` (최근 3일, 최대 8건)
-- **API**: `GET /api/disclosures?stockCode=005930&days=7`, `POST /api/disclosures/collect?stockCode=005930`
-
----
-
-## 9. 최근 구현
-
-- **종가베팅 Fast AI**: 15:10~15:20, `CLOSING_BET` + 캐시 없음 → OpenAI 동기 호출(기본 3초, `app.ai.platform.closing-bet-fast-ai-timeout-ms`)
-- **뉴스 ingest 단일 경로**: `NewsArticleIngestPipeline` → `strategy_signal` (레거시 `trading_signal`은 `legacy-trading-signal-on-ingest: true` 시만)
-- **프론트**: `/strategy-signals` — CANDIDATE/REJECTED/EXCLUDED 탭, AI·Risk 상세
-
----
-
-## 10. 점수 공식 (BUY)
+## 점수 공식
 
 ```
 finalBuyScore ≈ ruleBased × 0.80 + aiOverall × 0.20 − riskPenalty
 ```
 
-AI `RISK`/`AVOID` → 매수 후보 제외. Risk Engine은 **주문 직전**에도 재검증.
+AI `RISK` / `AVOID` → 매수 후보 제외.
 
-전략별 fallback: `StrategyAiPolicyService` (백엔드).
+---
+
+## 주요 DB 테이블
+
+| 테이블 | 용도 |
+|--------|------|
+| `strategy_signal` | 전략별 시그널 (화면 **전략 시그널**) |
+| `trading_signal` | 레거시 매매 시그널 (화면 **매매 시그널**) |
+| `ai_company_analysis` | AI 기업 분석 캐시 |
+| `stock_disclosure` | DART 공시 |
+| `user_watchlist` | 관심종목 |
+| `ai_trade_review` | 장마감 복기 |
+
+---
+
+## 백엔드 패키지 (개발자용)
+
+| 패키지 | 역할 |
+|--------|------|
+| `tradingflow` | 장전/장마감 파이프라인 |
+| `ai.platform` | AI 배치·캐시 ([AI-PLATFORM.md](./AI-PLATFORM.md)) |
+| `strategy` | 전략 판단·시그널 |
+| `disclosure` | DART 공시 |
+| `news` | 뉴스 수집 |
+
+AI 상세: [AI-PLATFORM.md](./AI-PLATFORM.md)

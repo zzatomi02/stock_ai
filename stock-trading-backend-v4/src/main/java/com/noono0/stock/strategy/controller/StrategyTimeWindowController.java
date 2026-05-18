@@ -16,8 +16,8 @@ public class StrategyTimeWindowController {
 
     @GetMapping
     public ApiResponse<?> list(
-            @RequestParam(required = false) String strategyType,
-            @RequestParam(required = false) String marketTimeWindow) {
+            @RequestParam(name = "strategyType", required = false) String strategyType,
+            @RequestParam(name = "marketTimeWindow", required = false) String marketTimeWindow) {
         return ApiResponse.ok(strategySettingsService.listStrategyTimeWindows(strategyType, marketTimeWindow));
     }
 

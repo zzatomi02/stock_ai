@@ -51,9 +51,9 @@ public class AiPlatformAdminController {
 
     @PostMapping("/jobs/company-analysis")
     public ApiResponse<?> enqueueCompany(
-            @RequestParam String stockCode,
-            @RequestParam(required = false) String stockName,
-            @RequestParam(defaultValue = "MANUAL") String timing) {
+            @RequestParam(name = "stockCode") String stockCode,
+            @RequestParam(name = "stockName", required = false) String stockName,
+            @RequestParam(name = "timing", defaultValue = "MANUAL") String timing) {
         AiExecutionTiming t = AiExecutionTiming.valueOf(timing);
         executionPolicy.assertLiveApiAllowed(t);
         return ApiResponse.ok(

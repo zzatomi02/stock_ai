@@ -93,6 +93,8 @@ app:
     telegram-bot-token: ${TELEGRAM_BOT_TOKEN:}
     telegram-chat-id: ${TELEGRAM_CHAT_ID:}
     discord-webhook-url: ${DISCORD_WEBHOOK_URL:}
+    email-enabled: false
+    alert-email: ${RISK_ALERT_EMAIL:}
   execution:
     phase: ${APP_EXECUTION_PHASE:OBSERVE}
     buy-score-threshold: ${SIGNAL_BUY_THRESHOLD:62}
@@ -125,9 +127,6 @@ app:
       - start: "09:00"
         end: "09:10"
         max-trades: 3
-  notifications:
-    email-enabled: false
-    alert-email: ${RISK_ALERT_EMAIL:}
   front-origin: ${NEXT_ORIGIN:http://localhost:3000}
   auth:
     password-reset:

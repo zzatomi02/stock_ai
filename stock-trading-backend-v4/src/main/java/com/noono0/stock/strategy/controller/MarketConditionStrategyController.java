@@ -16,8 +16,8 @@ public class MarketConditionStrategyController {
 
     @GetMapping
     public ApiResponse<?> list(
-            @RequestParam(required = false) String marketCondition,
-            @RequestParam(required = false) String strategyType) {
+            @RequestParam(name = "marketCondition", required = false) String marketCondition,
+            @RequestParam(name = "strategyType", required = false) String strategyType) {
         return ApiResponse.ok(
                 strategySettingsService.listMarketConditionStrategies(marketCondition, strategyType));
     }

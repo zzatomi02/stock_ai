@@ -17,17 +17,18 @@ public class AiCompanyAnalysisController {
 
     @GetMapping("/today")
     public ApiResponse<?> today(
-            @RequestParam(required = false) String stockCode,
-            @RequestParam(required = false) String decision,
-            @RequestParam(required = false) String providerType,
-            @RequestParam(required = false) Double minScore) {
+            @RequestParam(name = "stockCode", required = false) String stockCode,
+            @RequestParam(name = "decision", required = false) String decision,
+            @RequestParam(name = "providerType", required = false) String providerType,
+            @RequestParam(name = "minScore", required = false) Double minScore) {
         return ApiResponse.ok(queryService.listToday(stockCode, decision, providerType, minScore));
     }
 
     @GetMapping("/{stockCode}")
     public ApiResponse<?> detail(
             @PathVariable String stockCode,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tradeDate) {
+            @RequestParam(name = "tradeDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate tradeDate) {
         return ApiResponse.ok(queryService.detail(stockCode, tradeDate));
     }
 }

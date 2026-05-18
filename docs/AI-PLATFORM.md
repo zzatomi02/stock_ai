@@ -1,69 +1,77 @@
-# AI 플랫폼 — 사용·개발 설명서
+# AI 플랫폼
 
-> 구현 위치: `stock-trading-backend-v4/src/main/java/com/noono0/stock/ai/platform/`
+> **쉬운 설명** → [USAGE-GUIDE.md](./USAGE-GUIDE.md) §1, §6  
+> 구현 코드: `stock-trading-backend-v4/.../ai/platform/`
 
-## 1. 실행 시점 정책 (`AiExecutionTiming`)
+---
 
-| Timing | API 호출 | 유효기간(예) |
-|--------|----------|--------------|
-| PRE_MARKET | 08:10~08:55 허용 | 당일 15:30 |
-| INTRADAY_ASYNC | 09:00~15:30 배치만 | +6시간 |
-| CLOSING_CANDIDATE | 14:30~15:10 | 당일 15:30 |
-| CLOSING_BET_FAST | 15:10~15:20 (종가베팅, 캐시 미스) | 당일 15:30, **3초 timeout** |
-| POST_MARKET | 15:40+ | ~7일 |
-| MANUAL | 장외만 | 유형별 |
-| INTRADAY_BLOCKED | **항상 금지** | — |
+## 기억할 것
 
-**빠른 판단**: `assertFastPathNoLiveApi()` — 장중 동기 경로에서 API 호출 시 예외.
+| 상황 | AI API |
+|------|--------|
+| 장중 “지금 살까?” (시그널 생성) | **안 부름** — DB 캐시만 |
+| 장전·장마감 배치 | **부름** — 결과를 DB에 저장 |
+| 종가베팅 15:10~15:20, 캐시 없음 | **최대 3초** 짧게 시도 |
+| 수동 분석 (장외) | **부름** |
 
-## 2. 배치 4단계
+---
 
-`AiScheduledBatchService` → `AiBatchOrchestratorService.runPhase(phase)`
+## 시간대별 AI
 
-1. `AiAnalysisTargetCollector` — 종목 후보
-2. `AiAnalysisJobService.enqueueCompanyAnalysis` — Job 생성 (dedup)
-3. sync 또는 `@Async` 로 `AiAnalysisExecutorService.processJob`
-4. 성공 시 `AiConsensusService.buildCompanyConsensus`
+| 이름 | 시간 | 설명 |
+|------|------|------|
+| PRE_MARKET | 08:10~08:55 | 장전 기업 분석 |
+| INTRADAY_ASYNC | 09:00~15:30 | 배치만 (몇 분 간격) |
+| CLOSING_CANDIDATE | 14:30~15:10 | 종가 후보 |
+| CLOSING_BET_FAST | 15:10~15:20 | 종가베팅, 3초 제한 |
+| POST_MARKET | 15:40~ | 장마감 심층 |
+| MANUAL | 장외 | Swagger/화면에서 수동 |
 
-장전/장마감은 `PreMarketPipelineService` / `PostMarketPipelineService` 가 E2E 포함.
+---
 
-## 3. 장중 캐시 조회
+## 배치가 하는 일 (4단계)
 
-`CachedAiAnalysisQueryService.getBestForTrading(stockCode)`
+1. 분석할 종목 목록 수집  
+2. Job 생성 (중복 방지)  
+3. OpenAI 등 API 호출  
+4. `ai_company_analysis` 에 저장 → 시그널 점수에 반영  
 
-- `valid_from <= now <= valid_until` 인 `ai_company_analysis` 만
-- `AiScoreBlendService` / `StrategySignalEnrichmentService` 에서 사용
+장전/장마감은 `PreMarketPipelineService` / `PostMarketPipelineService` 가 뉴스·공시와 함께 실행.
 
-## 4. REST API
+---
 
-| 메서드 | 경로 |
-|--------|------|
-| GET/PUT | `/api/ai/providers` |
-| GET/PUT | `/api/ai/models/{id}` |
-| GET/POST/PUT | `/api/ai/prompt-templates` |
-| POST | `/api/ai/analysis/request` |
-| GET | `/api/ai/company-analysis/today` |
-| GET | `/api/ai/company-analysis/{stockCode}` |
-| GET | `/api/ai/cached/{stockCode}` |
+## 자주 쓰는 API
 
-레거시: `/api/ai/platform/*`
+| 용도 | API |
+|------|-----|
+| 오늘 분석 목록 | `GET /api/ai/company-analysis/today` |
+| 종목별 | `GET /api/ai/company-analysis/{stockCode}` |
+| 장중 캐시만 | `GET /api/ai/cached/company/{stockCode}` |
+| 수동 요청 | `POST /api/ai/analysis/request` |
+| Provider 설정 | `GET/PUT /api/ai/providers` |
 
-## 5. 운영 기능 체크리스트
+---
 
-| # | 기능 | 구현 |
-|---|------|------|
-| 1 | 유효기간 | `AiValidityService` |
-| 2 | input_hash 중복 | `AiJobDedupService` |
-| 3 | 토큰·비용 | `AiUsageLog` + `AiCostEstimatorService` |
-| 4 | 실패 fallback | `AiAnalysisFallbackService` |
-| 5 | Provider 성과 | `GET /api/trading-flow/ai-provider-performance` |
-| 6 | 템플릿 버전 | PUT 시 prompt 변경 → version bump |
-| 7 | 설정 승인 | `strategy_config_change_request` |
-| 8 | API Key 보안 | 응답에 env 이름만 |
-| 9 | 장중 API 제한 | `AiExecutionPolicyService` |
-| 10 | signal에 AI 저장 | `strategy_signal` AI 컬럼 |
+## 설정
 
-## 6. 수동 분석 요청 예시
+```yaml
+app:
+  ai:
+    platform:
+      batch-enabled: true
+      rule-score-weight: 0.80
+      ai-score-weight: 0.20
+      closing-bet-fast-ai-enabled: true
+      closing-bet-fast-ai-timeout-ms: 3000
+  openai:
+    api-key: ${OPENAI_API_KEY:}   # 또는 application-secrets.local.yml
+```
+
+키는 DB에 저장하지 않습니다.
+
+---
+
+## 수동 분석 예시
 
 ```json
 POST /api/ai/analysis/request
@@ -75,9 +83,12 @@ POST /api/ai/analysis/request
 }
 ```
 
-## 7. Provider 설정
+---
 
-- DB: `ai_provider_config`, `ai_model_config`
-- 시드: `AiPlatformSeedRunner` (기동 시)
-- OpenAI: `OpenAiProviderClient` — `OPENAI_API_KEY`
-- 기타: Stub 클라이언트 (확장 가능)
+## 운영 기능 (요약)
+
+- 분석 **유효기간** 만료 처리  
+- 같은 입력 **중복 Job** 방지  
+- **토큰·비용** 로그  
+- API 실패 시 **이전 캐시 fallback**  
+- 전략 설정 변경 **승인** 후 반영  

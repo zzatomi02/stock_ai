@@ -29,7 +29,7 @@ public class TradingFlowController {
     }
 
     @GetMapping("/ai-provider-performance")
-    public ApiResponse<?> aiPerformance(@RequestParam(defaultValue = "7") int days) {
+    public ApiResponse<?> aiPerformance(@RequestParam(name = "days", defaultValue = "7") int days) {
         return ApiResponse.ok(providerPerformanceService.statsSince(LocalDateTime.now().minusDays(days)));
     }
 }

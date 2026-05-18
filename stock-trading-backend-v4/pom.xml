@@ -12,6 +12,7 @@
     <version>0.1.0</version>
     <properties>
         <java.version>17</java.version>
+        <maven.compiler.parameters>true</maven.compiler.parameters>
         <scala.version>2.13.14</scala.version>
         <scala-maven-plugin.version>4.9.2</scala-maven-plugin.version>
         <springdoc.version>2.6.0</springdoc.version>

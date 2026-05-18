@@ -26,7 +26,8 @@ public class StrategyOrchestrationController {
     }
 
     @PatchMapping("/{code}/enabled")
-    public ApiResponse<?> setBaseEnabled(@PathVariable("code") String code, @RequestParam boolean enabled) {
+    public ApiResponse<?> setBaseEnabled(
+            @PathVariable("code") String code, @RequestParam(name = "enabled") boolean enabled) {
         orchestrationService.setBaseEnabled(code, enabled);
         return ApiResponse.ok(Map.of("code", code, "enabled", enabled), "기본 ON/OFF가 변경되었습니다.");
     }
@@ -34,9 +35,10 @@ public class StrategyOrchestrationController {
     @PutMapping("/{code}/today")
     public ApiResponse<?> setToday(
             @PathVariable("code") String code,
-            @RequestParam(required = false) Boolean enabled,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam(required = false) String memo) {
+            @RequestParam(name = "enabled", required = false) Boolean enabled,
+            @RequestParam(name = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate date,
+            @RequestParam(name = "memo", required = false) String memo) {
         LocalDate tradeDate = date != null ? date : LocalDate.now(KST);
         if (enabled == null) {
             orchestrationService.clearTodayOverride(code, tradeDate);
@@ -51,9 +53,9 @@ public class StrategyOrchestrationController {
     @PutMapping("/{code}/market-rules")
     public ApiResponse<?> upsertMarketRule(
             @PathVariable("code") String code,
-            @RequestParam MarketCondition marketCondition,
-            @RequestParam boolean enabled,
-            @RequestParam(defaultValue = "1.0") double weight) {
+            @RequestParam(name = "marketCondition") MarketCondition marketCondition,
+            @RequestParam(name = "enabled") boolean enabled,
+            @RequestParam(name = "weight", defaultValue = "1.0") double weight) {
         orchestrationService.upsertMarketRule(code, marketCondition, enabled, weight);
         return ApiResponse.ok(orchestrationService.listMarketRules(code), "시장 상태 규칙이 저장되었습니다.");
     }
@@ -61,9 +63,9 @@ public class StrategyOrchestrationController {
     @PutMapping("/{code}/time-rules")
     public ApiResponse<?> upsertTimeRule(
             @PathVariable("code") String code,
-            @RequestParam MarketTimeWindow marketTimeWindow,
-            @RequestParam boolean enabled,
-            @RequestParam(defaultValue = "1.0") double weight) {
+            @RequestParam(name = "marketTimeWindow") MarketTimeWindow marketTimeWindow,
+            @RequestParam(name = "enabled") boolean enabled,
+            @RequestParam(name = "weight", defaultValue = "1.0") double weight) {
         orchestrationService.upsertTimeRule(code, marketTimeWindow, enabled, weight);
         return ApiResponse.ok(orchestrationService.listTimeRules(code), "시간대 규칙이 저장되었습니다.");
     }

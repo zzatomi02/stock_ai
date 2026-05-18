@@ -27,7 +27,8 @@ public class DisclosureController {
 
     @GetMapping
     public List<StockDisclosure> list(
-            @RequestParam String stockCode, @RequestParam(defaultValue = "7") int days) {
+            @RequestParam(name = "stockCode") String stockCode,
+            @RequestParam(name = "days", defaultValue = "7") int days) {
         String normalized = DartCorpCodeService.normalizeStockCode(stockCode);
         LocalDate since = tradingClock.today().minusDays(Math.max(1, days));
         return repository.findByStockCodeAndRceptDtGreaterThanEqualOrderByRceptDtDesc(
@@ -36,7 +37,8 @@ public class DisclosureController {
 
     @PostMapping("/collect")
     public ResponseEntity<Map<String, Object>> collect(
-            @RequestParam String stockCode, @RequestParam(required = false) Integer days) {
+            @RequestParam(name = "stockCode") String stockCode,
+            @RequestParam(name = "days", required = false) Integer days) {
         int lookback = days != null ? days : dartProperties.getDefaultLookbackDays();
         int saved = collectService.collectRecent(stockCode, lookback);
         Map<String, Object> body = new LinkedHashMap<>();

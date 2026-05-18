@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
 
+const DEFAULT_ALLOWED_PREFIXES =
+  'auth,market,dashboard,strategies,strategy,strategy-settings,strategy-runtime-settings,strategy-time-windows,strategy-config-changes,market-condition-strategies,news,statistics,backtest,ai,broker,ops,signals,watchlist,risk,llm,orders,trading-flow,disclosures'
+
 function backendBase(): string {
   return (
     process.env.INTERNAL_API_BASE_URL ||
@@ -11,10 +14,7 @@ function backendBase(): string {
 }
 
 function allowedPrefixes(): string[] {
-  return (
-    process.env.PROXY_ALLOWED_PREFIXES ||
-    'auth,market,dashboard,strategies,strategy,news,statistics,backtest,ai,broker,ops'
-  )
+  return (process.env.PROXY_ALLOWED_PREFIXES || DEFAULT_ALLOWED_PREFIXES)
     .split(',')
     .map((prefix) => prefix.trim().replace(/^\/+|\/+$/g, ''))
     .filter(Boolean)
@@ -58,42 +58,26 @@ function proxyHeaders(req: NextRequest, contentType?: string | null): HeadersIni
   }
 }
 
-export async function GET(req: NextRequest, context: { params: Promise<{ path: string[] }> }) {
+async function forwardRequest(
+  req: NextRequest,
+  context: { params: Promise<{ path: string[] }> },
+  method: string,
+) {
   const { path } = await context.params
   const suffix = resolveSuffix(path)
   if (!suffix) {
-    return NextResponse.json({ success: false, data: null, message: '허용되지 않은 프록시 경로입니다.' }, { status: 403 })
-  }
-  const url = `${backendBase()}/${suffix}${req.nextUrl.search}`
-  try {
-    const res = await fetch(url, { cache: 'no-store', headers: proxyHeaders(req) })
-    const text = await res.text()
-    return new NextResponse(text, {
-      status: res.status,
-      headers: { 'content-type': res.headers.get('content-type') || 'application/json' },
-    })
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e)
     return NextResponse.json(
-      { success: false, data: null, message: `백엔드 연결 실패: ${url} (${msg})` },
-      { status: 502 },
+      { success: false, data: null, message: '허용되지 않은 프록시 경로입니다.' },
+      { status: 403 },
     )
   }
-}
-
-export async function POST(req: NextRequest, context: { params: Promise<{ path: string[] }> }) {
-  const { path } = await context.params
-  const suffix = resolveSuffix(path)
-  if (!suffix) {
-    return NextResponse.json({ success: false, data: null, message: '허용되지 않은 프록시 경로입니다.' }, { status: 403 })
-  }
   const url = `${backendBase()}/${suffix}${req.nextUrl.search}`
+  const hasBody = method !== 'GET' && method !== 'HEAD'
   try {
-    const body = await req.text()
     const res = await fetch(url, {
-      method: 'POST',
-      headers: proxyHeaders(req, req.headers.get('content-type') || 'application/json'),
-      body: body || undefined,
+      method,
+      headers: proxyHeaders(req, hasBody ? req.headers.get('content-type') || 'application/json' : null),
+      body: hasBody ? await req.text() : undefined,
       cache: 'no-store',
     })
     const text = await res.text()
@@ -108,4 +92,24 @@ export async function POST(req: NextRequest, context: { params: Promise<{ path: 
       { status: 502 },
     )
   }
+}
+
+export async function GET(req: NextRequest, context: { params: Promise<{ path: string[] }> }) {
+  return forwardRequest(req, context, 'GET')
+}
+
+export async function POST(req: NextRequest, context: { params: Promise<{ path: string[] }> }) {
+  return forwardRequest(req, context, 'POST')
+}
+
+export async function PUT(req: NextRequest, context: { params: Promise<{ path: string[] }> }) {
+  return forwardRequest(req, context, 'PUT')
+}
+
+export async function PATCH(req: NextRequest, context: { params: Promise<{ path: string[] }> }) {
+  return forwardRequest(req, context, 'PATCH')
+}
+
+export async function DELETE(req: NextRequest, context: { params: Promise<{ path: string[] }> }) {
+  return forwardRequest(req, context, 'DELETE')
 }

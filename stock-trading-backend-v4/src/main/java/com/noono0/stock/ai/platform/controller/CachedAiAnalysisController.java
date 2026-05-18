@@ -30,7 +30,8 @@ public class CachedAiAnalysisController {
     @GetMapping("/company/{stockCode}/bundle")
     public ApiResponse<?> bundle(
             @PathVariable String stockCode,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tradeDate) {
+            @RequestParam(name = "tradeDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate tradeDate) {
         LocalDate d = tradeDate != null ? tradeDate : LocalDate.now();
         return ApiResponse.ok(queryService.getTradingBundle(stockCode, d));
     }

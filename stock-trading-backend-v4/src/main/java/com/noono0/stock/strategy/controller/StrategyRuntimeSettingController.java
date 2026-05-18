@@ -24,7 +24,7 @@ public class StrategyRuntimeSettingController {
 
     @GetMapping
     public ApiResponse<?> list(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            @RequestParam(name = "tradeDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
                     LocalDate tradeDate) {
         LocalDate d = tradeDate != null ? tradeDate : LocalDate.now(KST);
         return ApiResponse.ok(strategySettingsService.listRuntimeSettings(d));
@@ -33,7 +33,7 @@ public class StrategyRuntimeSettingController {
     @PostMapping
     public ApiResponse<?> save(
             @Valid @RequestBody StrategyRuntimeSettingRequest body,
-            @RequestParam(defaultValue = "false") boolean requireApproval) {
+            @RequestParam(name = "requireApproval", defaultValue = "false") boolean requireApproval) {
         if (requireApproval) {
             var pending =
                     configApprovalService.submit(

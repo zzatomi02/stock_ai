@@ -31,7 +31,7 @@ public class StrategyController {
 
     @GetMapping("/enabled-now")
     public ApiResponse<?> enabledNow(
-            @RequestParam(required = false)
+            @RequestParam(name = "evaluatedAt", required = false)
                     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
                     LocalDateTime evaluatedAt) {
         return ApiResponse.ok(withOptionalClock(evaluatedAt, strategySettingsService::getEnabledNow));
@@ -40,7 +40,7 @@ public class StrategyController {
     /** 8단계 판단 + 구성 점수 공식 (기사 없이 전략 게이트만) */
     @GetMapping("/decision-context")
     public ApiResponse<?> decisionContext(
-            @RequestParam(required = false)
+            @RequestParam(name = "evaluatedAt", required = false)
                     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
                     LocalDateTime evaluatedAt) {
         return ApiResponse.ok(

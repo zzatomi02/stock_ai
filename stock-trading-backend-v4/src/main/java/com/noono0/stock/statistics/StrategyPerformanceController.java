@@ -19,8 +19,10 @@ public class StrategyPerformanceController {
 
     @GetMapping("/summary")
     public ApiResponse<?> summary(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+            @RequestParam(name = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate from,
+            @RequestParam(name = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate to) {
         LocalDate f = from != null ? from : LocalDate.now().minusDays(30);
         LocalDate t = to != null ? to : LocalDate.now();
         return ApiResponse.ok(performanceService.summary(f, t));

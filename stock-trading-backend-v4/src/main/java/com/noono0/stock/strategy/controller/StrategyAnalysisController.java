@@ -22,7 +22,7 @@ public class StrategyAnalysisController {
     @PostMapping("/article/{articleId}")
     public ApiResponse<?> analyzeArticle(
             @PathVariable("articleId") long articleId,
-            @RequestParam(required = false)
+            @RequestParam(name = "evaluatedAt", required = false)
                     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
                     LocalDateTime evaluatedAt) {
         LocalDateTime at = evaluatedAt != null ? evaluatedAt.atZone(KST).toLocalDateTime() : LocalDateTime.now(KST);
@@ -42,7 +42,7 @@ public class StrategyAnalysisController {
     @PostMapping("/scan-recent")
     public ApiResponse<?> scanRecent(
             @RequestParam(name = "hours", defaultValue = "24") int hours,
-            @RequestParam(required = false)
+            @RequestParam(name = "evaluatedAt", required = false)
                     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
                     LocalDateTime evaluatedAt) {
         LocalDateTime at = evaluatedAt != null ? evaluatedAt.atZone(KST).toLocalDateTime() : LocalDateTime.now(KST);
@@ -53,7 +53,7 @@ public class StrategyAnalysisController {
 
     @GetMapping("/signals")
     public ApiResponse<?> signals(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(name = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam(name = "status", defaultValue = "CANDIDATE") String status) {
         LocalDate d = date != null ? date : LocalDate.now(KST);
         var list = strategyAnalysisService.listSignals(d, status);
