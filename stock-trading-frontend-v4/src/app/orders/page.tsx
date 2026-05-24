@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { AppShell } from '@/components/layout/AppShell'
 import { apiGet } from '@/lib/api'
+import { notifyError } from '@/lib/toast'
 
 type DailyCcnlRow = {
   orderDate?: string
@@ -45,10 +46,7 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<OrderAttempt[]>([])
   const [ready, setReady] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [err, setErr] = useState<string | null>(null)
-
   const load = useCallback(async () => {
-    setErr(null)
     setLoading(true)
     try {
       const [v, o] = await Promise.all([
@@ -57,10 +55,10 @@ export default function OrdersPage() {
       ])
       setExec(v ?? null)
       setOrders(Array.isArray(o) ? o : [])
-    } catch (e) {
+    } catch (error) {
       setExec({ rows: [] })
       setOrders([])
-      setErr(e instanceof Error ? e.message : String(e))
+      notifyError(error)
     } finally {
       setLoading(false)
       setReady(true)
@@ -83,16 +81,6 @@ export default function OrdersPage() {
             {loading ? '불러오는 중…' : '새로고침'}
           </button>
         </div>
-        {err ? (
-          <p style={{ color: '#f87171', fontSize: 14, marginBottom: 12 }}>
-            {err}
-            <br />
-            <span style={{ color: '#9fb2d9', fontSize: 12 }}>
-              KIS 권한·쿠키(로그인)·모의/실전 설정을 확인하세요. 백엔드가 8080에서 떠 있어야 합니다.
-            </span>
-          </p>
-        ) : null}
-
         <h2 style={{ fontSize: 16, margin: '0 0 8px' }}>앱에 기록된 주문 시도(최근)</h2>
         <p style={{ color: '#8b9dc7', fontSize: 12, marginBottom: 8 }}>
           시장가 매수·매도 시도마다 DB에 남깁니다. <code>reasoning</code>은 주문 시 선택 입력한 사유입니다.

@@ -53,6 +53,8 @@ services:
       NAVER_CLIENT_ID: "${NAVER_CLIENT_ID:-}"
       NAVER_CLIENT_SECRET: "${NAVER_CLIENT_SECRET:-}"
       NAVER_NEWS_SORT: "${NAVER_NEWS_SORT:-date}"
+      # Docker Desktop(Windows)에서 3000이 excludedportrange에 잡히는 경우가 많아 호스트는 4000 사용
+      APP_CORS_ALLOWED_ORIGINS: "${APP_CORS_ALLOWED_ORIGINS:-http://localhost:4000,http://localhost:3000}"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/actuator/health"]
       interval: 5s
@@ -73,7 +75,7 @@ services:
     image: stock-frontend:local
     container_name: stock-frontend
     ports:
-      - "3000:3000"
+      - "4000:3000"
     environment:
       AUTH_SECRET: "${AUTH_SECRET:-local-docker-insecure-auth-secret-min-32chars-ok}"
       AUTH_TRUST_HOST: "true"

@@ -98,7 +98,7 @@ public class DisclosureCollectService {
         LocalDate rceptDt;
         try {
             rceptDt = LocalDate.parse(rceptDtStr, YMD);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             rceptDt = tradingClock.today();
         }
         StockDisclosure row = new StockDisclosure();

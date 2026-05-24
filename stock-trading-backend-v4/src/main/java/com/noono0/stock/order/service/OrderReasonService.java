@@ -48,7 +48,7 @@ public class OrderReasonService {
             json.put("grade", signal.getSignalGrade());
             json.put("reasonSnapshot", signal.getReasonSnapshot());
             r.setReasonJson(objectMapper.writeValueAsString(json));
-        } catch (Exception e) {
+        } catch (Exception exception) {
             r.setReasonJson("{}");
         }
         return repository.save(r);

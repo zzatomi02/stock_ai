@@ -132,14 +132,14 @@ public class NewsSourceCollectService {
                 newsArticleJpaRepository.save(row);
                 try {
                     llmNewsIngestEnricher.enrichIfEnabled(row);
-                } catch (Exception e) {
+                } catch (Exception exception) {
                     log.warn("【LLM-INGEST】 enrich 실패(기사는 저장됨) id={} sourceId={} err={}",
-                            row.getId(), source.getId(), e.getMessage());
+                            row.getId(), source.getId(), exception.getMessage());
                 }
                 saved++;
-            } catch (Exception ex) {
+            } catch (Exception exception) {
                 log.warn("【NEWS-COLLECT】 기사 처리 실패 sourceId={} url={} err={}",
-                        source.getId(), articleUrl, ex.getMessage());
+                        source.getId(), articleUrl, exception.getMessage());
             }
         }
         log.info("【NEWS-COLLECT】 소스 수집 완료 id={} name={} 추출={} 처리={} 저장={}",

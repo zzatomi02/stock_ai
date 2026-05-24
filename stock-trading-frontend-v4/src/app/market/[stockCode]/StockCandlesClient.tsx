@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { CandlesChart } from '@/components/chart/CandlesChart'
 import { apiGet } from '@/lib/api'
+import { notifyError } from '@/lib/toast'
 
 type TabId = '1m' | '1h' | '1d' | '1w' | '1mo'
 
@@ -22,11 +23,8 @@ export function StockCandlesClient({ stockCode }: { stockCode: string }) {
     Array<{ time: string; open: number; high: number; low: number; close: number; volume: number }>
   >([])
   const [loading, setLoading] = useState(false)
-  const [err, setErr] = useState('')
-
   const load = useCallback(async () => {
     setLoading(true)
-    setErr('')
     try {
       const data = await apiGet<CandlesResponse>(`/market/stocks/${encodeURIComponent(stockCode)}/candles?tf=${tf}`)
       const list = (data as CandlesResponse).candles
@@ -44,9 +42,9 @@ export function StockCandlesClient({ stockCode }: { stockCode: string }) {
           volume: Number(c.volume ?? 0),
         }))
       )
-    } catch (e) {
+    } catch (error) {
       setCandles([])
-      setErr(e instanceof Error ? e.message : String(e))
+      notifyError(error)
     } finally {
       setLoading(false)
     }
@@ -76,7 +74,6 @@ export function StockCandlesClient({ stockCode }: { stockCode: string }) {
         ))}
         {loading ? <span style={{ color: '#667085', fontSize: 14 }}>불러오는 중…</span> : null}
       </div>
-      {err ? <p style={{ color: '#b42318', marginBottom: 8 }}>{err}</p> : null}
       <p style={{ color: '#667085', fontSize: 12, marginBottom: 8 }}>
         분봉·시봉은 당일 위주(한국투자 API)이며, 분봉은 연속 조회로 당일 구간을 이어 붙입니다. 시봉은 60분 단위(기술 API 미수신
         시 분봉을 집계)입니다.
@@ -92,7 +89,7 @@ export function StockCandlesClient({ stockCode }: { stockCode: string }) {
             volume: c.volume,
           }))}
         />
-      ) : !loading && !err ? (
+      ) : !loading ? (
         <p style={{ textAlign: 'center', color: '#667085' }}>선택한 봉에 대한 데이터가 없습니다.</p>
       ) : null}
     </section>

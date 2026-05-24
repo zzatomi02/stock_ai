@@ -76,12 +76,12 @@ public class MarketService {
                         snapshot = marketTop100SnapshotRepository.save(row);
                         log.info("【KIS-TOP100-CACHE】 최신 스냅샷 저장 type={} count={} updatedAt={}",
                                 normalizedType, fresh.size(), snapshot.getUpdatedAt());
-                    } catch (Exception e) {
-                        log.warn("【KIS-TOP100-CACHE】 갱신 실패 type={} err={}", normalizedType, e.getMessage());
+                    } catch (Exception exception) {
+                        log.warn("【KIS-TOP100-CACHE】 갱신 실패 type={} err={}", normalizedType, exception.getMessage());
                         if (snapshot == null || !StringUtils.hasText(snapshot.getPayloadJson())) {
-                            throw e instanceof RuntimeException ? (RuntimeException) e : new IllegalStateException(e.getMessage(), e);
+                            throw exception instanceof RuntimeException ? (RuntimeException) exception : new IllegalStateException(exception.getMessage(), exception);
                         }
-                        snapshot.setLastError(e.getMessage());
+                        snapshot.setLastError(exception.getMessage());
                         marketTop100SnapshotRepository.save(snapshot);
                     }
                 }
@@ -104,8 +104,8 @@ public class MarketService {
         if (snapshot == null || !StringUtils.hasText(snapshot.getPayloadJson())) return List.of();
         try {
             return objectMapper.readValue(snapshot.getPayloadJson(), new TypeReference<List<TopStockDto>>() {});
-        } catch (Exception e) {
-            log.warn("【KIS-TOP100-CACHE】 스냅샷 역직렬화 실패 type={} err={}", snapshot.getType(), e.getMessage());
+        } catch (Exception exception) {
+            log.warn("【KIS-TOP100-CACHE】 스냅샷 역직렬화 실패 type={} err={}", snapshot.getType(), exception.getMessage());
             return List.of();
         }
     }
@@ -169,11 +169,11 @@ public class MarketService {
                 }
                 reqTrCont = "N";
             }
-        } catch (IllegalStateException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("【KIS-TOP100】 예외: {}", e.getMessage(), e);
-            throw new IllegalStateException("KIS Top100 조회 중 예외: " + e.getMessage(), e);
+        } catch (IllegalStateException exception) {
+            throw exception;
+        } catch (Exception exception) {
+            log.error("【KIS-TOP100】 예외: {}", exception.getMessage(), exception);
+            throw new IllegalStateException("KIS Top100 조회 중 예외: " + exception.getMessage(), exception);
         }
 
         if (out.isEmpty()) {
@@ -270,7 +270,7 @@ public class MarketService {
         }
         try {
             return Integer.parseInt(r.asText("").trim());
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException exception) {
             return 0;
         }
     }
@@ -286,7 +286,7 @@ public class MarketService {
         String s = n.asText("").replace(",", "").trim();
         try {
             return Long.parseLong(s);
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException exception) {
             return 0L;
         }
     }
@@ -455,7 +455,7 @@ public class MarketService {
     private static void sleepQuietly(int ms) {
         try {
             Thread.sleep(ms);
-        } catch (InterruptedException e) {
+        } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
         }
     }

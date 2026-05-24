@@ -96,13 +96,13 @@ public class AuthMailService {
         try {
             ms.send(m);
             log.info("[{}] 메일 발송: to={}", logTag, toEmail);
-        } catch (MailAuthenticationException e) {
-            log.warn("[{}] SMTP 인증 실패: {}", logTag, e.getMessage());
-            throw new IllegalStateException(gmailAuthHelpMessage(), e);
-        } catch (Exception e) {
-            log.warn("[{}] 메일 발송 실패: {}", logTag, e.getMessage());
+        } catch (MailAuthenticationException exception) {
+            log.warn("[{}] SMTP 인증 실패: {}", logTag, exception.getMessage());
+            throw new IllegalStateException(gmailAuthHelpMessage(), exception);
+        } catch (Exception exception) {
+            log.warn("[{}] 메일 발송 실패: {}", logTag, exception.getMessage());
             throw new IllegalStateException(
-                    "메일을 보내지 못했습니다. MAIL_HOST·MAIL_USERNAME·MAIL_PASSWORD 설정을 확인하세요.", e);
+                    "메일을 보내지 못했습니다. MAIL_HOST·MAIL_USERNAME·MAIL_PASSWORD 설정을 확인하세요.", exception);
         }
     }
 

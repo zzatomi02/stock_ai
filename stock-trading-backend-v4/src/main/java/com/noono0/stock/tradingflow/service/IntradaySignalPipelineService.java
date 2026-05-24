@@ -1,6 +1,8 @@
 package com.noono0.stock.tradingflow.service;
 
 import com.noono0.stock.news.domain.NewsArticle;
+import com.noono0.stock.recommendation.service.StockRecommendationAutoExecutor;
+import com.noono0.stock.recommendation.service.StockRecommendationService;
 import com.noono0.stock.strategy.service.StrategyAnalysisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +22,8 @@ public class IntradaySignalPipelineService {
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     private final StrategyAnalysisService strategyAnalysisService;
+    private final StockRecommendationService stockRecommendationService;
+    private final StockRecommendationAutoExecutor stockRecommendationAutoExecutor;
 
     public void onNewsArticleSaved(NewsArticle article) {
         if (article.getId() == null) {
@@ -29,8 +33,10 @@ public class IntradaySignalPipelineService {
             var results = strategyAnalysisService.analyzeArticle(article, LocalDateTime.now(KST));
             long candidates = results.stream().filter(r -> "CANDIDATE".equals(r.status())).count();
             log.info("[INTRADAY-PIPELINE] article={} candidates={}", article.getId(), candidates);
-        } catch (Exception e) {
-            log.warn("[INTRADAY-PIPELINE] article={} 실패 — {}", article.getId(), e.getMessage());
+            stockRecommendationService.syncFromStrategySignals();
+            stockRecommendationAutoExecutor.scanAndOrder();
+        } catch (Exception exception) {
+            log.warn("[INTRADAY-PIPELINE] article={} 실패 — {}", article.getId(), exception.getMessage());
         }
     }
 }

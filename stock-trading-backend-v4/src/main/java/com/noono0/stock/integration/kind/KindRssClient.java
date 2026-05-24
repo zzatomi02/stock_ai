@@ -46,9 +46,9 @@ public class KindRssClient {
                                 text(item, "pubDate")));
             }
             return result;
-        } catch (Exception e) {
-            log.warn("KIND RSS 파싱 실패: {}", e.getMessage());
-            throw new IllegalStateException("KIND RSS 파싱 실패: " + e.getMessage(), e);
+        } catch (Exception exception) {
+            log.warn("KIND RSS 파싱 실패: {}", exception.getMessage());
+            throw new IllegalStateException("KIND RSS 파싱 실패: " + exception.getMessage(), exception);
         }
     }
 

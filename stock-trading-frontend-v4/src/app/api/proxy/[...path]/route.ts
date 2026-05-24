@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 
 const DEFAULT_ALLOWED_PREFIXES =
-  'auth,market,dashboard,strategies,strategy,strategy-settings,strategy-runtime-settings,strategy-time-windows,strategy-config-changes,market-condition-strategies,news,statistics,backtest,ai,broker,ops,signals,watchlist,risk,llm,orders,trading-flow,disclosures'
+  'auth,market,dashboard,strategies,strategy,strategy-settings,strategy-runtime-settings,strategy-time-windows,strategy-config-changes,market-condition-strategies,news,statistics,backtest,ai,broker,ops,signals,watchlist,risk,llm,orders,trading-flow,disclosures,recommendations'
 
 function backendBase(): string {
   return (
@@ -85,8 +85,8 @@ async function forwardRequest(
       status: res.status,
       headers: { 'content-type': res.headers.get('content-type') || 'application/json' },
     })
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e)
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error)
     return NextResponse.json(
       { success: false, data: null, message: `백엔드 연결 실패: ${url} (${msg})` },
       { status: 502 },

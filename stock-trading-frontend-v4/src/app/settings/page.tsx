@@ -5,7 +5,9 @@ import Link from 'next/link'
 import { Eye, EyeOff } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
 import { EmergencyStopButton } from '@/components/ops/EmergencyStopButton'
+import { ExecutionModeSettings } from '@/components/settings/ExecutionModeSettings'
 import { apiGet, apiPost } from '@/lib/api'
+import { notifyError, notifySuccess, notifyWarning } from '@/lib/toast'
 
 type Mode = 'paper' | 'real'
 
@@ -36,7 +38,6 @@ function emptyFields() {
 export default function SettingsPage() {
   const [userId, setUserId] = useState('')
   const [status, setStatus] = useState<LinkStatus | null>(null)
-  const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState<Record<Mode, ReturnType<typeof emptyFields>>>({
     paper: emptyFields(),
@@ -91,21 +92,20 @@ export default function SettingsPage() {
   async function saveCredential(mode: Mode) {
     const v = form[mode]
     if (!userId.trim()) {
-      setMsg('먼저 로그인하여 사용자 쿠키(user-id)가 있어야 합니다.')
+      notifyWarning('먼저 로그인하여 사용자 쿠키(user-id)가 있어야 합니다.')
       return
     }
     if (!v.appKey.trim()) {
-      setMsg(`${mode} appKey 를 입력하세요.`)
+      notifyWarning(`${mode} appKey 를 입력하세요.`)
       return
     }
     const f = status?.[mode === 'paper' ? 'paperForm' : 'realForm']
     const canSkipSecret = f?.hasAppSecret && !v.appSecret.trim()
     if (!canSkipSecret && !v.appSecret.trim()) {
-      setMsg(`${mode} appSecret 을 입력하세요. (이미 저장된 경우 비우면 이전 시크릿이 유지됩니다.)`)
+      notifyWarning(`${mode} appSecret 을 입력하세요. (이미 저장된 경우 비우면 이전 시크릿이 유지됩니다.)`)
       return
     }
     setLoading(true)
-    setMsg('')
     try {
       await apiPost('/broker/kis/credentials', {
         mode,
@@ -114,14 +114,14 @@ export default function SettingsPage() {
         accountNo: v.accountNo.trim(),
         productCode: v.productCode.trim() || '01',
       })
-      setMsg(`${mode} 연동 정보 저장 완료`)
+      notifySuccess(`${mode} 연동 정보 저장 완료`)
       setForm((prev) => ({
         ...prev,
         [mode]: { ...prev[mode], appSecret: '' },
       }))
       await loadStatus()
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+    } catch (error) {
+      notifyError(error)
     } finally {
       setLoading(false)
     }
@@ -233,7 +233,7 @@ export default function SettingsPage() {
             )
           })}
         </div>
-        {msg ? <p style={{ marginTop: 12, color: '#475467' }}>{msg}</p> : null}
+        <ExecutionModeSettings />
         <hr style={{ margin: '24px 0', border: 'none', borderTop: '1px solid #D0D5DD' }} />
         <h2 style={{ fontSize: 16 }}>긴급 정지</h2>
         <p style={{ fontSize: 13, color: '#667085' }}>활성화 시 KIS 주문·자동매매가 차단됩니다.</p>

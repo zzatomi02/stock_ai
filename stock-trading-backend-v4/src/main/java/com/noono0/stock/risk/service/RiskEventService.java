@@ -34,7 +34,7 @@ public class RiskEventService {
         if (detail != null) {
             try {
                 e.setDetailJson(objectMapper.writeValueAsString(detail));
-            } catch (Exception ex) {
+            } catch (Exception exception) {
                 e.setDetailJson("{}");
             }
         }

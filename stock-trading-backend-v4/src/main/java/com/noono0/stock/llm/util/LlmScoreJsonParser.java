@@ -59,7 +59,7 @@ public final class LlmScoreJsonParser {
                     return clamp100(root.asInt());
                 }
             }
-        } catch (Exception e) {
+        } catch (Exception exception) {
             return null;
         }
         return null;

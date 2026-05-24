@@ -71,7 +71,7 @@ public class AuthService {
         long id;
         try {
             id = Long.parseLong(userId.trim());
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException numberFormatException) {
             throw new IllegalStateException("유효하지 않은 사용자입니다.");
         }
         AppUser user = appUserMapper.findById(id);

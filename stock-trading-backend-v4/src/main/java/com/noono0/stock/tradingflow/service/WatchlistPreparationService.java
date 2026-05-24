@@ -67,8 +67,8 @@ public class WatchlistPreparationService {
                         s.getStockName() != null ? s.getStockName() : s.getStockCode(),
                         count);
                 count++;
-            } catch (Exception e) {
-                log.debug("[WATCHLIST] skip {} — {}", s.getStockCode(), e.getMessage());
+            } catch (Exception exception) {
+                log.debug("[WATCHLIST] skip {} — {}", s.getStockCode(), exception.getMessage());
             }
         }
         log.info("[WATCHLIST] user={} added/updated {} stocks from {}", userId, count, tradeDate);

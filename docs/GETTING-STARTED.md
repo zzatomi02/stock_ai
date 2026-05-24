@@ -22,11 +22,11 @@ docker compose -f docker-compose.dev.yml up
 
 | 서비스 | URL |
 |--------|-----|
-| **프론트 (화면)** | http://localhost:3000 |
+| **프론트 (화면)** | http://localhost:4000 (`docker-compose.dev.yml` — Windows에서 3000 포트가 시스템 예약 구간에 걸리는 경우가 있어 4000으로 노출) |
 | 백엔드 API | http://localhost:8080 |
 | Swagger | http://localhost:8080/swagger-ui.html |
 | AI (선택) | http://localhost:8001 |
-| MySQL | localhost:3306 / DB `stock_ai_db` |
+| MySQL | localhost:**13307** → 컨테이너 3306 / DB `stock_ai_db` |
 
 ### 기동이 느릴 때
 

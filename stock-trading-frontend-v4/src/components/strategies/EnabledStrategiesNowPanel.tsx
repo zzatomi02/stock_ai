@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { OnOffBadge } from '@/components/strategies/OnOffBadge'
 import { apiGet } from '@/lib/api'
+import { notifyError } from '@/lib/toast'
 import { marketConditionLabel, strategyLabel, timeWindowLabel } from '@/lib/strategy-labels'
 
 type StrategyItem = {
@@ -33,15 +34,13 @@ function num(v: number | string | null | undefined) {
 export function EnabledStrategiesNowPanel() {
   const [data, setData] = useState<EnabledNow | null>(null)
   const [loading, setLoading] = useState(false)
-  const [msg, setMsg] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
-    setMsg('')
     try {
       setData(await apiGet<EnabledNow>('/strategies/enabled-now'))
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+    } catch (error) {
+      notifyError(error)
     } finally {
       setLoading(false)
     }
@@ -64,7 +63,6 @@ export function EnabledStrategiesNowPanel() {
           새로고침
         </button>
       </div>
-      {msg ? <p style={{ marginTop: 8, color: '#B42318' }}>{msg}</p> : null}
       {data ? (
         <>
           <div

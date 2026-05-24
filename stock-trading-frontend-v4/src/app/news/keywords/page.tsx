@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { AppShell } from '@/components/layout/AppShell'
 import { apiDelete, apiGet, apiPost } from '@/lib/api'
+import { notifyError, notifySuccess } from '@/lib/toast'
 
 type Keyword = {
   id: number
@@ -17,13 +18,12 @@ type Keyword = {
 export default function NewsKeywordsPage() {
   const [list, setList] = useState<Keyword[]>([])
   const [form, setForm] = useState({ keyword: '', keywordType: 'POSITIVE', weight: 10, description: '' })
-  const [msg, setMsg] = useState('')
 
   const load = useCallback(async () => {
     try {
       setList(await apiGet<Keyword[]>('/news/keywords'))
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+    } catch (error) {
+      notifyError(error)
     }
   }, [])
 
@@ -32,9 +32,24 @@ export default function NewsKeywordsPage() {
   }, [load])
 
   async function add() {
-    await apiPost('/news/keywords', form)
-    setForm({ keyword: '', keywordType: 'POSITIVE', weight: 10, description: '' })
-    await load()
+    try {
+      await apiPost('/news/keywords', form)
+      setForm({ keyword: '', keywordType: 'POSITIVE', weight: 10, description: '' })
+      await load()
+      notifySuccess('키워드가 등록되었습니다.')
+    } catch (error) {
+      notifyError(error)
+    }
+  }
+
+  async function remove(id: number) {
+    try {
+      await apiDelete(`/news/keywords/${id}`)
+      await load()
+      notifySuccess('삭제되었습니다.')
+    } catch (error) {
+      notifyError(error)
+    }
   }
 
   return (
@@ -42,7 +57,6 @@ export default function NewsKeywordsPage() {
       <section className="card">
         <h1>뉴스 키워드 관리</h1>
         <p style={{ color: '#667085', fontSize: 13 }}>긍정/부정/리스크 키워드는 DB에서 관리됩니다. 매칭 시 이력이 저장됩니다.</p>
-        {msg ? <p style={{ color: '#b42318' }}>{msg}</p> : null}
         <form
           style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '12px 0' }}
           onSubmit={(e) => {
@@ -79,7 +93,7 @@ export default function NewsKeywordsPage() {
                 <td>{k.weight}</td>
                 <td>{k.description || '-'}</td>
                 <td>
-                  <button type="button" className="button button--ghost" onClick={() => apiDelete(`/news/keywords/${k.id}`).then(load)}>
+                  <button type="button" className="button button--ghost" onClick={() => remove(k.id)}>
                     삭제
                   </button>
                 </td>

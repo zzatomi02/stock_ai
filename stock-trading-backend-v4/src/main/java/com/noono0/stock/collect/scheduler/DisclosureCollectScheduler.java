@@ -27,8 +27,8 @@ public class DisclosureCollectScheduler {
             int n = kindRssDisclosureCollectorService.collect();
             scheduleMonitor.touch("kind-rss-collect");
             log.info("KIND RSS 수집 완료 saved={}", n);
-        } catch (Exception e) {
-            log.warn("KIND RSS 수집 실패: {}", e.getMessage());
+        } catch (Exception exception) {
+            log.warn("KIND RSS 수집 실패: {}", exception.getMessage());
         }
     }
 }

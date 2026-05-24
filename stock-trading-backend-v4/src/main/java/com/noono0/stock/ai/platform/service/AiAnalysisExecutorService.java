@@ -54,10 +54,10 @@ public class AiAnalysisExecutorService {
         try {
             execute(job);
             job.setStatus(AiJobStatus.SUCCESS.name());
-        } catch (Exception e) {
+        } catch (Exception exception) {
             job.setStatus(AiJobStatus.FAILED.name());
-            job.setErrorMessage(e.getMessage());
-            log.error("[AI-JOB] 실패 id={} — {}", jobId, e.getMessage());
+            job.setErrorMessage(exception.getMessage());
+            log.error("[AI-JOB] 실패 id={} — {}", jobId, exception.getMessage());
             tryApplyFallback(job);
         }
         job.setFinishedAt(LocalDateTime.now());

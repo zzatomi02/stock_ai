@@ -99,11 +99,8 @@ app:
     phase: ${APP_EXECUTION_PHASE:OBSERVE}
     buy-score-threshold: ${SIGNAL_BUY_THRESHOLD:62}
     sell-score-threshold: ${SIGNAL_SELL_THRESHOLD:38}
-  auto-trade:
-    enabled: ${AUTO_TRADE_ENABLED:false}
-    scan-interval-ms: 60000
-    demo-stock: "005930"
-    demo-qty: 1
+  recommendation:
+    sync-interval-ms: ${RECOMMENDATION_SYNC_INTERVAL_MS:180000}
   news:
     collect-enabled: ${NEWS_COLLECT_ENABLED:false}
     collect-query: "코스피"

@@ -62,8 +62,8 @@ public class PreMarketPipelineService {
                     disclosuresSaved +=
                             disclosureCollectService.collectRecent(
                                     t.stockCode(), flowProperties.getPreMarketDisclosureLookbackDays());
-                } catch (Exception e) {
-                    log.warn("[PRE-MARKET] DART 수집 실패 stock={}: {}", t.stockCode(), e.getMessage());
+                } catch (Exception exception) {
+                    log.warn("[PRE-MARKET] DART 수집 실패 stock={}: {}", t.stockCode(), exception.getMessage());
                 }
             }
         }

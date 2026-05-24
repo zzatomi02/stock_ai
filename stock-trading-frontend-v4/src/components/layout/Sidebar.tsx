@@ -32,6 +32,7 @@ const market: Item[] = [
 const insight: Item[] = [
   { label: '매매 시그널', href: '/signals', icon: <Zap size={18} /> },
   { label: '전략 시그널', href: '/strategy-signals', icon: <Sparkles size={18} /> },
+  { label: '종목 추천', href: '/recommendations', icon: <Star size={18} /> },
   { label: '관심종목', href: '/watchlist', icon: <Star size={18} /> },
   { label: '전략 관리', href: '/strategies', icon: <Sparkles size={18} /> },
   { label: '전략 설정', href: '/strategy-settings', icon: <Sparkles size={18} /> },

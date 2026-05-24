@@ -97,7 +97,7 @@ public class NewsController {
         int display;
         try {
             display = Integer.parseInt(displayRaw.trim());
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException numberFormatException) {
             throw new IllegalArgumentException("display는 정수여야 합니다.");
         }
         return ApiResponse.ok(Map.of("saved", newsIngestService.ingest(query, display, stockCode)));

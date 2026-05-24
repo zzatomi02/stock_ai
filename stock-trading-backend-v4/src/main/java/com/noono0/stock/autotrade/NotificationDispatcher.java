@@ -44,16 +44,16 @@ public class NotificationDispatcher {
                                 telegramChat,
                                 URLEncoder.encode(text, StandardCharsets.UTF_8));
                 restClient.get().uri(u).retrieve().toBodilessEntity();
-            } catch (Exception e) {
-                log.warn("telegram: {}", e.getMessage());
+            } catch (Exception exception) {
+                log.warn("telegram: {}", exception.getMessage());
             }
         }
         if (StringUtils.hasText(discordUrl)) {
             try {
                 String body = "{\"content\":\"" + text.replace("\\", "\\\\").replace("\"", "\\\"") + "\"}";
                 restClient.post().uri(discordUrl).header("Content-Type", "application/json").body(body).retrieve().toBodilessEntity();
-            } catch (Exception e) {
-                log.warn("discord: {}", e.getMessage());
+            } catch (Exception exception) {
+                log.warn("discord: {}", exception.getMessage());
             }
         }
         mailSender.ifAvailable(
@@ -66,8 +66,8 @@ public class NotificationDispatcher {
                         m.setSubject("[StockAI] 알림");
                         m.setText(text);
                         ms.send(m);
-                    } catch (Exception e) {
-                        log.warn("mail: {}", e.getMessage());
+                    } catch (Exception exception) {
+                        log.warn("mail: {}", exception.getMessage());
                     }
                 });
     }

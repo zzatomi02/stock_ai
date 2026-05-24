@@ -164,7 +164,7 @@ public record StrategySignalResponseDto(
         }
         try {
             return MarketCondition.valueOf(code).label();
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException illegalArgumentException) {
             return code;
         }
     }
@@ -175,7 +175,7 @@ public record StrategySignalResponseDto(
         }
         try {
             return MarketTimeWindow.valueOf(code).label();
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException illegalArgumentException) {
             return code;
         }
     }

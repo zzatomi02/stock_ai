@@ -1,52 +1,74 @@
 package com.noono0.stock.execution;
 
-import com.noono0.stock.execution.config.ExecutionPhaseProperties;
+import com.noono0.stock.execution.runtime.ExecutionRuntimeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
 public class OrderGateway {
-    private final ExecutionPhaseProperties properties;
+    private final ExecutionRuntimeService executionRuntimeService;
 
     public ExecutionPhase currentPhase() {
-        return properties.resolvedPhase();
+        return executionRuntimeService.currentPhase();
     }
 
     public void assertKisOrderAllowed(String kisMode) {
-        if ("real".equalsIgnoreCase(kisMode)) {
-            throw new OrderGatewayException(
-                    "REAL_TRADING 정책: 실전(real) 주문은 아직 허용되지 않습니다. OBSERVE·KIS_PAPER·VIRTUAL을 사용하세요.");
-        }
         ExecutionPhase p = currentPhase();
-        if (p == ExecutionPhase.OBSERVE || p == ExecutionPhase.VIRTUAL) {
+        if (p.isObserveOnly()) {
             throw new OrderGatewayException(
-                    "현재 실행 단계(" + p + ")에서는 KIS 주문을 할 수 없습니다. 관찰/가상 모드입니다.");
+                    "현재 실행 단계(" + p + ")에서는 KIS 주문을 할 수 없습니다. 종목 추천·분석만 합니다.");
         }
-        if (p == ExecutionPhase.KIS_PAPER && !"paper".equalsIgnoreCase(kisMode)) {
-            throw new OrderGatewayException(
-                    "KIS 모의투자 단계에서는 paper 모드로만 주문할 수 있습니다.");
+        if ("real".equalsIgnoreCase(kisMode)) {
+            if (!executionRuntimeService.get().isRealTradingEnabled()) {
+                throw new OrderGatewayException(
+                        "실전 주문이 비활성입니다. 설정에서 real-trading-enabled 를 켜거나 단계를 모의로 변경하세요.");
+            }
+            if (p != ExecutionPhase.REAL_ALERT && p != ExecutionPhase.REAL_AUTO) {
+                throw new OrderGatewayException("실전 주문은 REAL_ALERT 또는 REAL_AUTO 단계에서만 가능합니다.");
+            }
         }
-        if ((p == ExecutionPhase.REAL_MANUAL || p == ExecutionPhase.REAL_AUTO)
-                && !"real".equalsIgnoreCase(kisMode)) {
+        if (p.requiresHumanApproval()) {
             throw new OrderGatewayException(
-                    "실전 단계(" + p + ")에서는 real 모드로만 주문할 수 있습니다.");
+                    "현재 단계("
+                            + p
+                            + ")는 추천·승인 모드입니다. 종목 추천 화면에서 승인 후 주문하세요.");
         }
-        if (p == ExecutionPhase.REAL_MANUAL) {
+        String expected = p.kisMode();
+        if (!expected.equalsIgnoreCase(kisMode)) {
             throw new OrderGatewayException(
-                    "실전 수동 승인 단계입니다. UI 승인 API(향후)를 통해서만 주문할 수 있습니다.");
+                    "단계 " + p + " 에서는 " + expected + " 모드로만 주문할 수 있습니다. 요청: " + kisMode);
+        }
+    }
+
+    /** 승인 API 전용 — ALERT 단계에서만 */
+    public void assertApprovalOrderAllowed(String kisMode) {
+        ExecutionPhase p = currentPhase();
+        if (!p.requiresHumanApproval()) {
+            throw new OrderGatewayException("승인 주문은 PAPER_ALERT / REAL_ALERT 단계에서만 가능합니다. 현재: " + p);
+        }
+        if ("real".equalsIgnoreCase(kisMode) && !executionRuntimeService.get().isRealTradingEnabled()) {
+            throw new OrderGatewayException("실전 주문이 비활성입니다.");
+        }
+        String expected = p.kisMode();
+        if (!expected.equalsIgnoreCase(kisMode)) {
+            throw new OrderGatewayException("단계 " + p + " 에서는 " + expected + " 모드만 허용됩니다.");
         }
     }
 
     public void assertAutoTradeAllowed() {
-        if (currentPhase() != ExecutionPhase.REAL_AUTO) {
+        ExecutionPhase p = currentPhase();
+        if (!p.allowsAutoOrder()) {
             throw new OrderGatewayException(
-                    "자동매매는 REAL_AUTO 단계에서만 허용됩니다. 현재: " + currentPhase());
+                    "자동매매는 PAPER_AUTO / REAL_AUTO 단계에서만 허용됩니다. 현재: " + p);
         }
     }
 
     public boolean allowsSignalOnly() {
-        ExecutionPhase p = currentPhase();
-        return p == ExecutionPhase.OBSERVE || p == ExecutionPhase.VIRTUAL;
+        return currentPhase().isObserveOnly();
+    }
+
+    public boolean requiresHumanApproval() {
+        return currentPhase().requiresHumanApproval();
     }
 }

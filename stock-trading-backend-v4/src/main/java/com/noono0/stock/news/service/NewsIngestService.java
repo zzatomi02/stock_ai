@@ -81,8 +81,8 @@ public class NewsIngestService {
             }
             try {
                 llmNewsIngestEnricher.enrichIfEnabled(a);
-            } catch (Exception e) {
-                log.warn("【LLM-INGEST】 enrich 실패(기사는 저장됨) id={} — {}", a.getId(), e.getMessage());
+            } catch (Exception exception) {
+                log.warn("【LLM-INGEST】 enrich 실패(기사는 저장됨) id={} — {}", a.getId(), exception.getMessage());
             }
             ingestPipeline.onArticleSaved(a);
             saved++;
@@ -100,7 +100,7 @@ public class NewsIngestService {
         if (!StringUtils.hasText(pub)) return null;
         try {
             return LocalDateTime.from(DateTimeFormatter.RFC_1123_DATE_TIME.parse(pub));
-        } catch (DateTimeParseException e) {
+        } catch (DateTimeParseException exception) {
             return null;
         }
     }

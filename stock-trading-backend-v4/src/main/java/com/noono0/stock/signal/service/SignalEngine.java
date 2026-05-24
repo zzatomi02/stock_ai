@@ -206,7 +206,7 @@ public class SignalEngine {
         m.put("summary", analysis.summary());
         try {
             return objectMapper.writeValueAsString(m);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             return "{}";
         }
     }

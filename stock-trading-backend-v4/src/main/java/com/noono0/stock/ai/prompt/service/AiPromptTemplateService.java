@@ -167,7 +167,7 @@ public class AiPromptTemplateService {
         logRow.setPromptCode(t.getPromptCode());
         try {
             logRow.setInputJson(objectMapper.writeValueAsString(input));
-        } catch (Exception e) {
+        } catch (Exception exception) {
             logRow.setInputJson("{}");
         }
         try {
@@ -185,12 +185,12 @@ public class AiPromptTemplateService {
             testLogRepository.save(logRow);
             return new TestResult(
                     logRow.getId(), t.getId(), t.getPromptCode(), t.getVersion(), raw, score, true, null);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             logRow.setSuccess(false);
-            logRow.setErrorMessage(e.getMessage());
+            logRow.setErrorMessage(exception.getMessage());
             testLogRepository.save(logRow);
             return new TestResult(
-                    logRow.getId(), t.getId(), t.getPromptCode(), t.getVersion(), null, 0, false, e.getMessage());
+                    logRow.getId(), t.getId(), t.getPromptCode(), t.getVersion(), null, 0, false, exception.getMessage());
         }
     }
 

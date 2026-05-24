@@ -45,9 +45,9 @@ public class KisApprovalClient {
                 throw new IllegalStateException("approval_key 파싱 실패: " + json);
             }
             return key;
-        } catch (Exception e) {
-            if (e instanceof RuntimeException re) throw re;
-            throw new IllegalStateException(e);
+        } catch (Exception exception) {
+            if (exception instanceof RuntimeException re) throw re;
+            throw new IllegalStateException(exception);
         }
     }
 
@@ -65,7 +65,7 @@ public class KisApprovalClient {
                     .body(objectMapper.writeValueAsString(body))
                     .retrieve()
                     .body(String.class);
-        } catch (Exception e1) {
+        } catch (Exception jsonRequestException) {
             try {
                 MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
                 form.add("grant_type", "client_credentials");
@@ -78,9 +78,10 @@ public class KisApprovalClient {
                         .body(form)
                         .retrieve()
                         .body(String.class);
-            } catch (Exception e2) {
-                e2.addSuppressed(e1);
-                throw new IllegalStateException("KIS Approval 호출 실패: " + e2.getMessage(), e2);
+            } catch (Exception formRequestException) {
+                formRequestException.addSuppressed(jsonRequestException);
+                throw new IllegalStateException(
+                        "KIS Approval 호출 실패: " + formRequestException.getMessage(), formRequestException);
             }
         }
     }

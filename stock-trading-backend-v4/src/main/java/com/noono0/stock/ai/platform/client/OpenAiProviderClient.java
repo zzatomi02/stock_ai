@@ -30,8 +30,8 @@ public class OpenAiProviderClient implements AiProviderClient {
         try {
             String content = openAiChatClient.chatCompletions(model, systemPrompt, userPrompt, temperature);
             return AiChatResponse.ok(content, 0, 0, System.currentTimeMillis() - t0);
-        } catch (Exception e) {
-            return AiChatResponse.fail(e.getMessage(), System.currentTimeMillis() - t0);
+        } catch (Exception exception) {
+            return AiChatResponse.fail(exception.getMessage(), System.currentTimeMillis() - t0);
         }
     }
 }

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { OnOffBadge } from '@/components/strategies/OnOffBadge'
 import { apiGet, apiPut } from '@/lib/api'
+import { notifyError, notifySuccess } from '@/lib/toast'
 import { MARKET_CONDITION_LABELS, marketConditionLabel, strategyLabel } from '@/lib/strategy-labels'
 
 type Row = {
@@ -20,7 +21,6 @@ export function MarketStrategySettingsTable() {
   const [filterMarket, setFilterMarket] = useState('')
   const [filterStrategy, setFilterStrategy] = useState('')
   const [loading, setLoading] = useState(false)
-  const [msg, setMsg] = useState('')
   const [edit, setEdit] = useState<Row | null>(null)
   const [form, setForm] = useState({
     isEnabled: true,
@@ -31,7 +31,6 @@ export function MarketStrategySettingsTable() {
 
   const load = useCallback(async () => {
     setLoading(true)
-    setMsg('')
     try {
       const q = new URLSearchParams()
       if (filterMarket) q.set('marketCondition', filterMarket)
@@ -39,8 +38,8 @@ export function MarketStrategySettingsTable() {
       const path = `/market-condition-strategies${q.toString() ? `?${q}` : ''}`
       const data = await apiGet<Row[]>(path)
       setRows(data)
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+    } catch (error) {
+      notifyError(error)
     } finally {
       setLoading(false)
     }
@@ -73,9 +72,9 @@ export function MarketStrategySettingsTable() {
       })
       setEdit(null)
       await load()
-      setMsg('저장되었습니다.')
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+      notifySuccess('저장되었습니다.')
+    } catch (error) {
+      notifyError(error)
     } finally {
       setLoading(false)
     }
@@ -112,7 +111,6 @@ export function MarketStrategySettingsTable() {
           조회
         </button>
       </div>
-      {msg ? <p style={{ marginTop: 8, color: '#475467' }}>{msg}</p> : null}
       <div style={{ marginTop: 12, overflowX: 'auto' }}>
         <table className="table">
           <thead>

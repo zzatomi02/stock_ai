@@ -41,7 +41,7 @@ public final class LlmNewsAnalysisParser {
                     stringList(root, "reason"),
                     stringList(root, "risk"),
                     normalizeActionHint(textOrNull(root, "actionHint")));
-        } catch (Exception e) {
+        } catch (Exception exception) {
             return legacyScoreOnly(raw);
         }
     }

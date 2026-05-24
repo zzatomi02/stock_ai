@@ -23,8 +23,8 @@ public class NewsCollectScheduler {
             int n = newsSourceCollectService.collectEnabledSources();
             scheduleMonitor.touch("news-collect");
             log.info("뉴스 소스 배치 수집 완료: {}건", n);
-        } catch (Exception e) {
-            log.warn("뉴스 소스 배치 수집 실패: {}", e.getMessage());
+        } catch (Exception exception) {
+            log.warn("뉴스 소스 배치 수집 실패: {}", exception.getMessage());
         }
     }
 }

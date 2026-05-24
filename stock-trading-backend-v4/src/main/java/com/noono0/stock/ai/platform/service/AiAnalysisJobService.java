@@ -151,7 +151,7 @@ public class AiAnalysisJobService {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             return HexFormat.of().formatHex(md.digest(input.getBytes(StandardCharsets.UTF_8))).substring(0, 32);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             return input;
         }
     }

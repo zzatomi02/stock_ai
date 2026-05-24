@@ -53,16 +53,16 @@ public class KindRssDisclosureCollectorService {
                         case DUPLICATE -> duplicate++;
                         case SKIPPED -> skipped++;
                     }
-                } catch (Exception e) {
+                } catch (Exception exception) {
                     errors++;
                     collectLogService.logError(
                             JOB_NAME,
                             PROVIDER,
                             "RSS_ITEM",
                             item.title(),
-                            e.getClass().getSimpleName(),
-                            e.getMessage(),
-                            e,
+                            exception.getClass().getSimpleName(),
+                            exception.getMessage(),
+                            exception,
                             url,
                             null);
                 }
@@ -74,11 +74,11 @@ public class KindRssDisclosureCollectorService {
             collectLogService.finishJob(
                     job, 1, responseCount, saved, duplicate, skipped, errors, status, null);
             return saved;
-        } catch (Exception e) {
+        } catch (Exception exception) {
             collectLogService.logError(
-                    JOB_NAME, PROVIDER, "RSS", url, e.getClass().getSimpleName(), e.getMessage(), e, url, null);
-            collectLogService.finishJob(job, 1, 0, 0, 0, 0, 1, CollectJobStatus.FAILED, e.getMessage());
-            throw e;
+                    JOB_NAME, PROVIDER, "RSS", url, exception.getClass().getSimpleName(), exception.getMessage(), exception, url, null);
+            collectLogService.finishJob(job, 1, 0, 0, 0, 0, 1, CollectJobStatus.FAILED, exception.getMessage());
+            throw exception;
         }
     }
 
@@ -116,7 +116,7 @@ public class KindRssDisclosureCollectorService {
         try {
             return ZonedDateTime.parse(pub, DateTimeFormatter.RFC_1123_DATE_TIME.withLocale(Locale.ENGLISH))
                     .toLocalDateTime();
-        } catch (Exception e) {
+        } catch (Exception exception) {
             return null;
         }
     }

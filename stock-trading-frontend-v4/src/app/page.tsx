@@ -30,16 +30,16 @@ export default async function DashboardPage() {
   let dashboardError = ''
   try {
     dashboard = await apiGet<any>('/dashboard')
-  } catch (e) {
-    dashboardError = e instanceof Error ? e.message : String(e)
+  } catch (error) {
+    dashboardError = error instanceof Error ? error.message : String(error)
   }
   let top100: any[] = []
   let top100Error = ''
   try {
     const snapshot = await apiGet<{ rows?: any[] }>('/market/top100?type=volume')
     top100 = Array.isArray(snapshot?.rows) ? snapshot.rows : []
-  } catch (e) {
-    top100Error = e instanceof Error ? e.message : String(e)
+  } catch (error) {
+    top100Error = error instanceof Error ? error.message : String(error)
   }
 
   const buyList: Signal[] = dashboard.buyCandidates || []

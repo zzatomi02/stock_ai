@@ -30,8 +30,8 @@ public class NewsArticleIngestPipeline {
         if (flowProperties.isLegacyTradingSignalOnIngest()) {
             try {
                 signalEngine.generateFromArticle(article, SignalEngine.SYSTEM_USER);
-            } catch (Exception e) {
-                log.warn("[INGEST-PIPELINE] legacy trading_signal 실패 article={} — {}", article.getId(), e.getMessage());
+            } catch (Exception exception) {
+                log.warn("[INGEST-PIPELINE] legacy trading_signal 실패 article={} — {}", article.getId(), exception.getMessage());
             }
         }
     }

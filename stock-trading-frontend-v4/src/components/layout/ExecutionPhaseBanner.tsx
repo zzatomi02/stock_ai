@@ -5,15 +5,19 @@ import { apiGet } from '@/lib/api'
 
 type PlatformStatus = {
   executionPhase?: string
+  executionPhaseLabel?: string
   observeOnly?: boolean
 }
 
 const LABELS: Record<string, string> = {
-  OBSERVE: '관찰 모드 — 매매 후보만 생성, 주문 없음',
-  VIRTUAL: '가상매매 모드 — DB 가상 체결만',
-  KIS_PAPER: 'KIS 모의투자 — 모의 API 주문 허용',
-  REAL_MANUAL: '실전 수동 승인 — 승인 후 주문(준비 중)',
-  REAL_AUTO: '제한적 실전 자동매매',
+  OBSERVE: '관찰 — 종목 추천 목록만',
+  VIRTUAL: '관찰(레거시)',
+  KIS_PAPER: '모의 — 추천 알림 + 승인',
+  PAPER_ALERT: '모의 — 추천 알림 + 승인 후 주문',
+  PAPER_AUTO: '모의 — 자동매매',
+  REAL_MANUAL: '실전 — 추천 알림 + 승인',
+  REAL_ALERT: '실전 — 추천 알림 + 승인 후 주문',
+  REAL_AUTO: '실전 — 자동매매',
 }
 
 /** 상단 실행 단계 배너. 페이지당 1회만 조회 (서버 컴포넌트 매 렌더 시 반복 호출 방지). */
@@ -36,7 +40,7 @@ export function ExecutionPhaseBanner() {
 
   const phase = status?.executionPhase || 'OBSERVE'
   const observeOnly = status?.observeOnly ?? true
-  const label = LABELS[phase] || phase
+  const label = status?.executionPhaseLabel || LABELS[phase] || phase
 
   return (
     <div

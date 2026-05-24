@@ -57,8 +57,8 @@ public class AuditAspect {
             a.setSuccess(success);
             a.setCreatedAt(LocalDateTime.now());
             auditLogMapper.insert(a);
-        } catch (Exception e) {
-            log.debug("audit log failed: {}", e.getMessage());
+        } catch (Exception exception) {
+            log.debug("audit log failed: {}", exception.getMessage());
         }
     }
 }

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { apiGet, apiPatch, apiPut } from '@/lib/api'
+import { notifyError, notifySuccess } from '@/lib/toast'
 
 type Snapshot = {
   evaluatedAt: string
@@ -32,16 +33,14 @@ type Snapshot = {
 export function StrategyOrchestrationPanel() {
   const [snap, setSnap] = useState<Snapshot | null>(null)
   const [loading, setLoading] = useState(false)
-  const [msg, setMsg] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
-    setMsg('')
     try {
       const data = await apiGet<Snapshot>('/strategies/orchestration/snapshot')
       setSnap(data)
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+    } catch (error) {
+      notifyError(error)
     } finally {
       setLoading(false)
     }
@@ -56,9 +55,9 @@ export function StrategyOrchestrationPanel() {
     try {
       await apiPatch(`/strategies/orchestration/${code}/enabled?enabled=${enabled}`)
       await load()
-      setMsg(`${code} 기본 ${enabled ? 'ON' : 'OFF'}`)
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+      notifySuccess(`${code} 기본 ${enabled ? 'ON' : 'OFF'}`)
+    } catch (error) {
+      notifyError(error)
     } finally {
       setLoading(false)
     }
@@ -69,9 +68,9 @@ export function StrategyOrchestrationPanel() {
     try {
       await apiPut(`/strategies/orchestration/${code}/today?enabled=${enabled}`, {})
       await load()
-      setMsg(`${code} 오늘만 ${enabled ? 'ON' : 'OFF'}`)
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+      notifySuccess(`${code} 오늘만 ${enabled ? 'ON' : 'OFF'}`)
+    } catch (error) {
+      notifyError(error)
     } finally {
       setLoading(false)
     }
@@ -81,7 +80,7 @@ export function StrategyOrchestrationPanel() {
     return (
       <section className="card">
         <h2>전략 오케스트레이션</h2>
-        <p style={{ color: '#667085' }}>{loading ? '불러오는 중…' : msg || '데이터 없음'}</p>
+        <p style={{ color: '#667085' }}>{loading ? '불러오는 중…' : '데이터 없음'}</p>
         <button className="button" type="button" onClick={load} disabled={loading}>
           새로고침
         </button>
@@ -174,7 +173,6 @@ export function StrategyOrchestrationPanel() {
           </tbody>
         </table>
       </div>
-      {msg ? <p style={{ marginTop: 10, color: '#475467' }}>{msg}</p> : null}
     </section>
   )
 }

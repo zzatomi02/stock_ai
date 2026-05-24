@@ -77,7 +77,7 @@ public class KisRealtimeWebSocketService {
         executor.shutdownNow();
         try {
             executor.awaitTermination(3, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
+        } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
         }
     }
@@ -99,8 +99,8 @@ public class KisRealtimeWebSocketService {
                                 opened.set(true);
                                 try {
                                     send(payload);
-                                } catch (Exception e) {
-                                    log.warn("KIS WS subscribe 전송 실패: {}", e.getMessage());
+                                } catch (Exception exception) {
+                                    log.warn("KIS WS subscribe 전송 실패: {}", exception.getMessage());
                                 }
                             }
 
@@ -140,12 +140,12 @@ public class KisRealtimeWebSocketService {
                     client.closeBlocking();
                 } catch (Exception ignored) {
                 }
-            } catch (InterruptedException e) {
+            } catch (InterruptedException exception) {
                 Thread.currentThread().interrupt();
                 break;
-            } catch (Exception e) {
-                lastError.set(e.getMessage());
-                log.warn("KIS 실시간 WS 루프: {} — 5초 후 재시도", e.getMessage());
+            } catch (Exception exception) {
+                lastError.set(exception.getMessage());
+                log.warn("KIS 실시간 WS 루프: {} — 5초 후 재시도", exception.getMessage());
                 try {
                     Thread.sleep(5000);
                 } catch (InterruptedException ie) {

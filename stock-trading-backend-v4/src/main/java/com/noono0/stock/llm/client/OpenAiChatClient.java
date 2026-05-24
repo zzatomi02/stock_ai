@@ -77,13 +77,13 @@ public class OpenAiChatClient {
                             .body(payload)
                             .retrieve()
                             .body(String.class);
-        } catch (RestClientResponseException e) {
-            String errBody = e.getResponseBodyAsString();
-            log.error("【OPENAI-LLM】 HTTP {} — {}", e.getStatusCode().value(), abbrev(errBody, 2000));
-            throw new IllegalStateException("OpenAI 응답 오류: " + e.getStatusCode(), e);
-        } catch (Exception e) {
-            log.error("【OPENAI-LLM】 요청 실패: {}", e.getMessage());
-            throw new IllegalStateException("OpenAI 호출 실패: " + e.getMessage(), e);
+        } catch (RestClientResponseException exception) {
+            String errBody = exception.getResponseBodyAsString();
+            log.error("【OPENAI-LLM】 HTTP {} — {}", exception.getStatusCode().value(), abbrev(errBody, 2000));
+            throw new IllegalStateException("OpenAI 응답 오류: " + exception.getStatusCode(), exception);
+        } catch (Exception exception) {
+            log.error("【OPENAI-LLM】 요청 실패: {}", exception.getMessage());
+            throw new IllegalStateException("OpenAI 호출 실패: " + exception.getMessage(), exception);
         }
 
         long ms = System.currentTimeMillis() - t0;
@@ -103,9 +103,9 @@ public class OpenAiChatClient {
                 return "";
             }
             return text;
-        } catch (Exception e) {
-            log.error("【OPENAI-LLM】 응답 파싱 실패 body(앞)={}", abbrev(json, 1500), e);
-            throw new IllegalStateException("OpenAI JSON 파싱 실패", e);
+        } catch (Exception exception) {
+            log.error("【OPENAI-LLM】 응답 파싱 실패 body(앞)={}", abbrev(json, 1500), exception);
+            throw new IllegalStateException("OpenAI JSON 파싱 실패", exception);
         }
     }
 

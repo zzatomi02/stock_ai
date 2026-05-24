@@ -31,8 +31,8 @@ public class NewsSearchCollectScheduler {
         for (NewsSearchKeyword keyword : due) {
             try {
                 totalSaved += naverNewsCollectorService.collectByKeyword(keyword);
-            } catch (Exception e) {
-                log.warn("뉴스 키워드 수집 실패 id={} keyword={}: {}", keyword.getId(), keyword.getKeyword(), e.getMessage());
+            } catch (Exception exception) {
+                log.warn("뉴스 키워드 수집 실패 id={} keyword={}: {}", keyword.getId(), keyword.getKeyword(), exception.getMessage());
             }
         }
         scheduleMonitor.touch("news-search-collect");

@@ -94,7 +94,7 @@ public class AiAnalysisTargetCollector {
         }
         try {
             return objectMapper.readValue(snap.getPayloadJson(), new TypeReference<List<TopStockDto>>() {});
-        } catch (Exception e) {
+        } catch (Exception exception) {
             return List.of();
         }
     }

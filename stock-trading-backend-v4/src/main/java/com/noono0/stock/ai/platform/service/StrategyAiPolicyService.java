@@ -16,7 +16,7 @@ public class StrategyAiPolicyService {
         StrategyType type;
         try {
             type = StrategyType.valueOf(strategyType);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException illegalArgumentException) {
             return new AiFallbackPolicy(true, RecommendedAction.WATCH_ONLY, "unknown-strategy");
         }
         return switch (type) {

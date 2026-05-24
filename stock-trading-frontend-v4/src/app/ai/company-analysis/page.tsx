@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react'
 import { AppShell } from '@/components/layout/AppShell'
 import { apiGet, apiPost } from '@/lib/api'
+import { notifyError, notifyInfo, notifySuccess } from '@/lib/toast'
 
 type Bundle = {
   stockCode: string
@@ -17,30 +18,27 @@ type Bundle = {
 export default function AiCompanyAnalysisPage() {
   const [stockCode, setStockCode] = useState('005930')
   const [bundle, setBundle] = useState<Bundle | null>(null)
-  const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
 
   const loadCached = useCallback(async () => {
     setLoading(true)
-    setMsg('')
     try {
       const data = await apiGet<Bundle>(`/ai/cached/company/${stockCode}/bundle`)
       setBundle(data)
-      setMsg('DB 캐시 조회 완료 (장중 안전)')
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+      notifyInfo('DB 캐시 조회 완료 (장중 안전)')
+    } catch (error) {
+      notifyError(error)
     } finally {
       setLoading(false)
     }
   }, [stockCode])
 
   const enqueueBatch = async () => {
-    setMsg('')
     try {
-      await apiPost(`/ai/platform/jobs/company-analysis?stockCode=${stockCode}&timing=MANUAL`)
-      setMsg('분석 작업 큐 등록됨 — 장외/수동 실행 시 API 호출')
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+      await apiPost(`/ai/platform/jobs/company-analysis?stockCode=${stockCode}&timing=MANUAL`, {})
+      notifySuccess('분석 작업 큐 등록됨 — 장외/수동 실행 시 API 호출')
+    } catch (error) {
+      notifyError(error)
     }
   }
 
@@ -76,7 +74,6 @@ export default function AiCompanyAnalysisPage() {
             분석 작업 등록
           </button>
         </div>
-        {msg && <p className="text-sm text-amber-300">{msg}</p>}
         {bundle && (
           <pre className="overflow-auto rounded-lg border border-slate-700 bg-slate-950 p-4 text-xs text-slate-200">
             {JSON.stringify(bundle, null, 2)}

@@ -57,9 +57,9 @@ public class NaverNewsSearchClient {
             int total = tree.path("total").asInt(-1);
             log.info("【NAVER-NEWS】 ★ 응답 수신 ★ display={} total={} (items 배열은 ingest에서 해석)", n, total);
             return tree;
-        } catch (Exception e) {
-            log.error("【NAVER-NEWS】 요청 실패: {}", e.getMessage());
-            throw new IllegalStateException("네이버 뉴스 검색 실패: " + e.getMessage(), e);
+        } catch (Exception exception) {
+            log.error("【NAVER-NEWS】 요청 실패: {}", exception.getMessage());
+            throw new IllegalStateException("네이버 뉴스 검색 실패: " + exception.getMessage(), exception);
         }
     }
 }

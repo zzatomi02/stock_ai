@@ -39,7 +39,7 @@ public class MarketWarningFilter {
         StockWarningType type;
         try {
             type = StockWarningType.valueOf(w.getWarningType());
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException illegalArgumentException) {
             type = StockWarningType.INVESTMENT_CAUTION;
         }
 

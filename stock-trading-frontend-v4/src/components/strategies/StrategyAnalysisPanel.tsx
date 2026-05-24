@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from 'react'
 import { apiGet, apiPost } from '@/lib/api'
+import { notifyError, notifyInfo, notifySuccess } from '@/lib/toast'
 
 type SignalSummary = {
   id: number
@@ -49,7 +50,6 @@ export function StrategyAnalysisPanel() {
   const [articleId, setArticleId] = useState('')
   const [hours, setHours] = useState('24')
   const [loading, setLoading] = useState(false)
-  const [msg, setMsg] = useState('')
   const [signals, setSignals] = useState<SignalSummary[]>([])
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [detail, setDetail] = useState<SignalDetail | null>(null)
@@ -57,13 +57,12 @@ export function StrategyAnalysisPanel() {
 
   const loadSignals = useCallback(async () => {
     setLoading(true)
-    setMsg('')
     try {
       const data = await apiGet<SignalsListResponse>('/strategies/analysis/signals?status=CANDIDATE')
       setSignals(data.items ?? [])
-      setMsg(`오늘 CANDIDATE ${data.items?.length ?? 0}건`)
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+      notifyInfo(`오늘 CANDIDATE ${data.items?.length ?? 0}건`)
+    } catch (error) {
+      notifyError(error)
     } finally {
       setLoading(false)
     }
@@ -76,8 +75,8 @@ export function StrategyAnalysisPanel() {
     try {
       const d = await apiGet<SignalDetail>(`/strategies/analysis/signals/${id}`)
       setDetail(d)
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+    } catch (error) {
+      notifyError(error)
     } finally {
       setDetailLoading(false)
     }
@@ -91,13 +90,12 @@ export function StrategyAnalysisPanel() {
   async function analyzeOne() {
     if (!articleId.trim()) return
     setLoading(true)
-    setMsg('')
     try {
       await apiPost<unknown>(`/strategies/analysis/article/${articleId.trim()}`, {})
-      setMsg('기사별 전략 분석 완료')
+      notifySuccess('기사별 전략 분석 완료')
       await loadSignals()
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+    } catch (error) {
+      notifyError(error)
     } finally {
       setLoading(false)
     }
@@ -105,16 +103,15 @@ export function StrategyAnalysisPanel() {
 
   async function scanRecent() {
     setLoading(true)
-    setMsg('')
     try {
       const data = await apiPost<{ candidateSignals?: number }>(
         `/strategies/analysis/scan-recent?hours=${hours}`,
         {},
       )
-      setMsg(`최근 기사 스캔 완료 (후보 ${data.candidateSignals ?? 0}건)`)
+      notifyInfo(`최근 기사 스캔 완료 (후보 ${data.candidateSignals ?? 0}건)`)
       await loadSignals()
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+    } catch (error) {
+      notifyError(error)
     } finally {
       setLoading(false)
     }
@@ -152,8 +149,6 @@ export function StrategyAnalysisPanel() {
           오늘 후보 조회
         </button>
       </div>
-      {msg ? <p style={{ marginTop: 10, color: '#475467' }}>{msg}</p> : null}
-
       {signals.length > 0 ? (
         <div style={{ marginTop: 16, overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>

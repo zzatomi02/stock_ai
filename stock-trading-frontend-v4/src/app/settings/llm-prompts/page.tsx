@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { AppShell } from '@/components/layout/AppShell'
 import { apiDelete, apiGet, apiPost, apiPut } from '@/lib/api'
+import { notifyError, notifyInfo, notifySuccess } from '@/lib/toast'
 
 type TemplateRow = {
   id: number
@@ -30,8 +31,6 @@ const PLACEHOLDERS = ['{{stockCode}}', '{{stockName}}', '{{title}}', '{{summary}
 export default function LlmPromptsPage() {
   const [list, setList] = useState<TemplateRow[]>([])
   const [loading, setLoading] = useState(true)
-  const [err, setErr] = useState<string | null>(null)
-  const [msg, setMsg] = useState<string | null>(null)
 
   const [editing, setEditing] = useState<TemplateRow | null>(null)
   const [isNew, setIsNew] = useState(false)
@@ -44,13 +43,12 @@ export default function LlmPromptsPage() {
   const [prevLoading, setPrevLoading] = useState(false)
 
   const load = useCallback(async () => {
-    setErr(null)
     setLoading(true)
     try {
       const rows = await apiGet<TemplateRow[]>('/llm/question-templates')
       setList(Array.isArray(rows) ? rows : [])
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e))
+    } catch (error) {
+      notifyError(error)
       setList([])
     } finally {
       setLoading(false)
@@ -81,8 +79,6 @@ export default function LlmPromptsPage() {
 
   async function save() {
     if (!editing) return
-    setMsg(null)
-    setErr(null)
     try {
       if (isNew) {
         await apiPost<{ id: number }>('/llm/question-templates', {
@@ -92,7 +88,7 @@ export default function LlmPromptsPage() {
           openaiModel: editing.openaiModel,
           temperature: editing.temperature,
         })
-        setMsg('새 템플릿이 저장되었습니다. 기본으로 쓰려면 목록에서 «기본으로»를 누르세요.')
+        notifySuccess('새 템플릿이 저장되었습니다. 기본으로 쓰려면 목록에서 «기본으로»를 누르세요.')
       } else {
         await apiPut(`/llm/question-templates/${editing.id}`, {
           name: editing.name,
@@ -101,46 +97,41 @@ export default function LlmPromptsPage() {
           openaiModel: editing.openaiModel,
           temperature: editing.temperature,
         })
-        setMsg('저장되었습니다.')
+        notifySuccess('저장되었습니다.')
       }
       setEditing(null)
       setIsNew(false)
       await load()
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e))
+    } catch (error) {
+      notifyError(error)
     }
   }
 
   async function setDefault(id: number) {
-    setMsg(null)
-    setErr(null)
     try {
       await apiPost(`/llm/question-templates/${id}/set-default`, {})
-      setMsg('기본 템플릿이 지정되었습니다.')
+      notifySuccess('기본 템플릿이 지정되었습니다.')
       await load()
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e))
+    } catch (error) {
+      notifyError(error)
     }
   }
 
   async function remove(id: number) {
     if (!window.confirm('이 템플릿을 삭제할까요?')) return
-    setMsg(null)
-    setErr(null)
     try {
       await apiDelete(`/llm/question-templates/${id}`)
       if (editing?.id === id) setEditing(null)
-      setMsg('삭제되었습니다.')
+      notifySuccess('삭제되었습니다.')
       await load()
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e))
+    } catch (error) {
+      notifyError(error)
     }
   }
 
   async function runPreview(useTemplateId: number | null) {
     setPreview(null)
     setPrevLoading(true)
-    setErr(null)
     try {
       const body: Record<string, unknown> = {
         title: pvTitle,
@@ -153,9 +144,9 @@ export default function LlmPromptsPage() {
       }
       const r = await apiPost<PreviewResult>('/llm/question-templates/preview', body)
       setPreview(r)
-      setMsg('미리보기가 완료되었습니다. (백엔드 콘솔에 【OPENAI-LLM】 로그를 확인하세요.)')
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e))
+      notifyInfo('미리보기가 완료되었습니다. (백엔드 콘솔에 【OPENAI-LLM】 로그를 확인하세요.)')
+    } catch (error) {
+      notifyError(error)
     } finally {
       setPrevLoading(false)
     }
@@ -181,16 +172,9 @@ export default function LlmPromptsPage() {
           {PLACEHOLDERS.join(', ')} 를 넣을 수 있으며, 뉴스 ingest·미리보기 시 치환됩니다. API 키는 서버
           환경 변수 <code>OPENAI_API_KEY</code> (또는 <code>app.openai.api-key</code>)로만 둡니다.
         </p>
-        {err ? (
-          <p style={{ color: '#f87171', marginBottom: 12, fontSize: 14 }}>
-            {err}
-            <br />
-            <span style={{ color: '#9fb2d9', fontSize: 12 }}>
-              수집 후 자동 LLM·비용: <code>app.openai.analyze-on-ingest</code> (로컬 기본 false)
-            </span>
-          </p>
-        ) : null}
-        {msg ? <p style={{ color: '#6ee7b7', marginBottom: 12, fontSize: 14 }}>{msg}</p> : null}
+        <p style={{ color: '#9fb2d9', fontSize: 12, marginBottom: 12 }}>
+          수집 후 자동 LLM·비용: <code>app.openai.analyze-on-ingest</code> (로컬 기본 false)
+        </p>
 
         <div className="card" style={{ background: 'rgba(15, 23, 42, 0.5)', marginBottom: 20 }}>
           <h3 style={{ marginTop: 0 }}>치환·프롬프트 품질 가이드</h3>

@@ -160,7 +160,7 @@ public final class KisCcnlOutputParser {
                         });
         try {
             return om.writeValueAsString(c);
-        } catch (JsonProcessingException e) {
+        } catch (JsonProcessingException jsonProcessingException) {
             return "";
         }
     }

@@ -24,7 +24,7 @@ public class AiProviderClientRegistry {
     public Optional<AiProviderClient> get(String providerType) {
         try {
             return Optional.ofNullable(clients.get(AiProviderType.valueOf(providerType)));
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException illegalArgumentException) {
             return Optional.empty();
         }
     }

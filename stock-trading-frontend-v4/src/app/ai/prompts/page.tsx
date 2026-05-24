@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { AppShell } from '@/components/layout/AppShell'
 import { apiGet, apiPost } from '@/lib/api'
+import { notifySuccess } from '@/lib/toast'
 
 type Prompt = {
   id: number
@@ -30,7 +31,6 @@ export default function AiPromptsPage() {
   const [list, setList] = useState<Prompt[]>([])
   const [editing, setEditing] = useState<Partial<Prompt> | null>(null)
   const [testOut, setTestOut] = useState<TestResult | null>(null)
-  const [msg, setMsg] = useState('')
 
   const load = useCallback(async () => {
     setList(await apiGet<Prompt[]>('/ai/prompts'))
@@ -52,7 +52,7 @@ export default function AiPromptsPage() {
       temperature: editing.temperature ?? 0.2,
     })
     setEditing(null)
-    setMsg('등록됨. 활성화는 목록에서 «활성»을 누르세요.')
+    notifySuccess('등록됨. 활성화는 목록에서 «활성»을 누르세요.')
     await load()
   }
 
@@ -64,13 +64,13 @@ export default function AiPromptsPage() {
       userPrompt: editing.userPrompt,
       temperature: editing.temperature,
     })
-    setMsg('새 버전이 생성되었습니다.')
+    notifySuccess('새 버전이 생성되었습니다.')
     await load()
   }
 
   async function activate(id: number) {
     await apiPost(`/ai/prompts/${id}/activate`, {})
-    setMsg('활성화됨')
+    notifySuccess('활성화됨')
     await load()
   }
 
@@ -91,7 +91,6 @@ export default function AiPromptsPage() {
         <p style={{ color: '#667085', fontSize: 13 }}>
           소스코드에 하드코딩하지 않습니다. 버전별 관리·활성화·테스트 결과는 DB에 저장됩니다.
         </p>
-        {msg ? <p style={{ color: '#6ee7b7' }}>{msg}</p> : null}
         <button type="button" className="button" style={{ marginBottom: 12 }} onClick={() => setEditing({ promptCode: 'NEWS_ANALYSIS', promptName: '뉴스 분석', userPrompt: '{{title}}\n{{summary}}', systemPrompt: '', temperature: 0.2 })}>
           새 프롬프트
         </button>

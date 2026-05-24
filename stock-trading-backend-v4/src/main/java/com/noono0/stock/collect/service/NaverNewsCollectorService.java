@@ -62,16 +62,16 @@ public class NaverNewsCollectorService {
                             case DUPLICATE -> duplicate++;
                             case SKIPPED -> skipped++;
                         }
-                    } catch (Exception e) {
+                    } catch (Exception exception) {
                         errors++;
                         collectLogService.logError(
                                 JOB_NAME,
                                 PROVIDER,
                                 "NEWS_ITEM",
                                 keyword.getKeyword(),
-                                e.getClass().getSimpleName(),
-                                e.getMessage(),
-                                e,
+                                exception.getClass().getSimpleName(),
+                                exception.getMessage(),
+                                exception,
                                 null,
                                 null);
                     }
@@ -102,21 +102,21 @@ public class NaverNewsCollectorService {
                     skipped,
                     errors);
             return saved;
-        } catch (Exception e) {
+        } catch (Exception exception) {
             errors++;
             collectLogService.logError(
                     JOB_NAME,
                     PROVIDER,
                     "NEWS_KEYWORD",
                     keyword.getKeyword(),
-                    e.getClass().getSimpleName(),
-                    e.getMessage(),
-                    e,
+                    exception.getClass().getSimpleName(),
+                    exception.getMessage(),
+                    exception,
                     null,
                     null);
             collectLogService.finishJob(
-                    job, requestCount, responseCount, saved, duplicate, skipped, errors, CollectJobStatus.FAILED, e.getMessage());
-            throw e;
+                    job, requestCount, responseCount, saved, duplicate, skipped, errors, CollectJobStatus.FAILED, exception.getMessage());
+            throw exception;
         }
     }
 
@@ -179,7 +179,7 @@ public class NaverNewsCollectorService {
         }
         try {
             return LocalDateTime.from(DateTimeFormatter.RFC_1123_DATE_TIME.parse(pub));
-        } catch (DateTimeParseException e) {
+        } catch (DateTimeParseException exception) {
             return null;
         }
     }

@@ -64,8 +64,8 @@ async function fetchWithStartupRetry(url: string, init: RequestInit): Promise<Re
   for (let i = 0; i < attempts; i += 1) {
     try {
       return await fetch(url, init)
-    } catch (e) {
-      lastError = e
+    } catch (error) {
+      lastError = error
       if (i === attempts - 1) break
       await sleep(1000)
     }
@@ -127,10 +127,10 @@ export async function apiGet<T>(path: string, schema?: z.ZodType<T>): Promise<T>
   let res: Response
   try {
     res = await fetchWithStartupRetry(url, { cache: 'no-store', headers: await tradingModeHeaders() })
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e)
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error)
     throw new Error(`API 연결 실패: ${url} — 백엔드(8080) 기동·INTERNAL_API_BASE_URL(Docker) 확인. (${msg})`, {
-      cause: e,
+      cause: error,
     })
   }
   const text = await res.text()
@@ -147,8 +147,8 @@ export async function apiGet<T>(path: string, schema?: z.ZodType<T>): Promise<T>
   if (!text) return undefined as T
   try {
     return parseApiData<T>(text, schema)
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e)
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error)
     throw new Error(`API 응답 형식이 올바르지 않습니다 (HTTP ${res.status}): ${msg}`)
   }
 }
@@ -171,9 +171,9 @@ export async function apiPost<T>(
       },
       body: JSON.stringify(body),
     })
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e)
-    throw new Error(`API 연결 실패: ${url} (${msg})`, { cause: e })
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error)
+    throw new Error(`API 연결 실패: ${url} (${msg})`, { cause: error })
   }
   const text = await res.text()
   if (!res.ok) {
@@ -189,8 +189,8 @@ export async function apiPost<T>(
   if (!text) return undefined as T
   try {
     return parseApiData<T>(text, schema)
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e)
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error)
     throw new Error(`API 응답 형식이 올바르지 않습니다 (HTTP ${res.status}): ${msg}`)
   }
 }
@@ -225,8 +225,8 @@ export async function apiPatch<T>(
   if (!text) return undefined as T
   try {
     return parseApiData<T>(text, schema)
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e)
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error)
     throw new Error(`API 응답 형식이 올바르지 않습니다 (HTTP ${res.status}): ${msg}`)
   }
 }
@@ -261,8 +261,8 @@ export async function apiPut<T>(
   if (!text) return undefined as T
   try {
     return parseApiData<T>(text, schema)
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e)
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error)
     throw new Error(`API 응답 형식이 올바르지 않습니다 (HTTP ${res.status}): ${msg}`)
   }
 }
@@ -289,8 +289,8 @@ export async function apiDelete<T>(path: string, schema?: z.ZodType<T>): Promise
   if (!text) return undefined as T
   try {
     return parseApiData<T>(text, schema)
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e)
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error)
     throw new Error(`API 응답 형식이 올바르지 않습니다 (HTTP ${res.status}): ${msg}`)
   }
 }

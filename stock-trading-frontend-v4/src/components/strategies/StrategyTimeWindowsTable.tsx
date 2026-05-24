@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { OnOffBadge } from '@/components/strategies/OnOffBadge'
 import { apiGet, apiPut } from '@/lib/api'
+import { notifyError, notifySuccess } from '@/lib/toast'
 import { strategyLabel, timeWindowLabel } from '@/lib/strategy-labels'
 
 type Row = {
@@ -24,7 +25,6 @@ export function StrategyTimeWindowsTable() {
   const [filterStrategy, setFilterStrategy] = useState('')
   const [filterWindow, setFilterWindow] = useState('')
   const [loading, setLoading] = useState(false)
-  const [msg, setMsg] = useState('')
   const [edit, setEdit] = useState<Row | null>(null)
   const [form, setForm] = useState({
     isEnabled: true,
@@ -36,15 +36,14 @@ export function StrategyTimeWindowsTable() {
 
   const load = useCallback(async () => {
     setLoading(true)
-    setMsg('')
     try {
       const q = new URLSearchParams()
       if (filterStrategy) q.set('strategyType', filterStrategy)
       if (filterWindow) q.set('marketTimeWindow', filterWindow)
       const path = `/strategy-time-windows${q.toString() ? `?${q}` : ''}`
       setRows(await apiGet<Row[]>(path))
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+    } catch (error) {
+      notifyError(error)
     } finally {
       setLoading(false)
     }
@@ -79,9 +78,9 @@ export function StrategyTimeWindowsTable() {
       })
       setEdit(null)
       await load()
-      setMsg('저장되었습니다.')
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+      notifySuccess('저장되었습니다.')
+    } catch (error) {
+      notifyError(error)
     } finally {
       setLoading(false)
     }
@@ -117,7 +116,6 @@ export function StrategyTimeWindowsTable() {
           조회
         </button>
       </div>
-      {msg ? <p style={{ marginTop: 8, color: '#475467' }}>{msg}</p> : null}
       <div style={{ marginTop: 12, overflowX: 'auto' }}>
         <table className="table">
           <thead>

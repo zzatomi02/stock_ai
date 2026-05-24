@@ -66,10 +66,10 @@ public class OrderValidationEngine {
         try {
             orderGateway.assertKisOrderAllowed(kisMode);
             check(checks, "executionPhaseAllowsOrder", true, null);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             passed = false;
-            check(checks, "executionPhaseAllowsOrder", false, e.getMessage());
-            fail.append(e.getMessage()).append(" ");
+            check(checks, "executionPhaseAllowsOrder", false, exception.getMessage());
+            fail.append(exception.getMessage()).append(" ");
         }
 
         check(
@@ -152,7 +152,7 @@ public class OrderValidationEngine {
         try {
             log.setValidationDetailJson(objectMapper.writeValueAsString(result.checks()));
             log.setChecks(log.getValidationDetailJson());
-        } catch (Exception e) {
+        } catch (Exception exception) {
             log.setValidationDetailJson("{}");
         }
         log.setCreatedAt(LocalDateTime.now());

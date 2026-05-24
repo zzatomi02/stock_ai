@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { AppShell } from '@/components/layout/AppShell'
 import { apiDelete, apiGet, apiPost } from '@/lib/api'
+import { notifyError, notifySuccess, notifyWarning } from '@/lib/toast'
 
 type Item = {
   id: number
@@ -19,19 +20,17 @@ export default function WatchlistPage() {
   const [items, setItems] = useState<Item[]>([])
   const [code, setCode] = useState('')
   const [name, setName] = useState('')
-  const [msg, setMsg] = useState('')
 
   async function load() {
     if (!readCookie('user-id')) {
-      setMsg('설정에서 user-id 쿠키를 먼저 등록하세요.')
+      notifyWarning('설정에서 user-id 쿠키를 먼저 등록하세요.')
       setItems([])
       return
     }
     try {
       setItems(await apiGet<Item[]>('/watchlist'))
-      setMsg('')
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+    } catch (error) {
+      notifyError(error)
     }
   }
 
@@ -45,8 +44,9 @@ export default function WatchlistPage() {
       setCode('')
       setName('')
       await load()
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+      notifySuccess('관심종목이 추가되었습니다.')
+    } catch (error) {
+      notifyError(error)
     }
   }
 
@@ -54,8 +54,9 @@ export default function WatchlistPage() {
     try {
       await apiDelete(`/watchlist/${stockCode}`)
       await load()
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+      notifySuccess('삭제되었습니다.')
+    } catch (error) {
+      notifyError(error)
     }
   }
 
@@ -64,7 +65,6 @@ export default function WatchlistPage() {
       <section className="card">
         <h1>관심종목</h1>
         <p style={{ color: '#667085', fontSize: 13 }}>user-id 쿠키 기준으로 저장됩니다.</p>
-        {msg ? <p style={{ color: '#b42318' }}>{msg}</p> : null}
         <form
           style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '12px 0' }}
           onSubmit={(e) => {

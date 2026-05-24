@@ -17,8 +17,8 @@ public class AiAsyncJobProcessor {
     public void processJobAsync(long jobId) {
         try {
             executorService.processJob(jobId);
-        } catch (Exception e) {
-            log.warn("[AI-ASYNC] job {} 실패: {}", jobId, e.getMessage());
+        } catch (Exception exception) {
+            log.warn("[AI-ASYNC] job {} 실패: {}", jobId, exception.getMessage());
         }
     }
 }

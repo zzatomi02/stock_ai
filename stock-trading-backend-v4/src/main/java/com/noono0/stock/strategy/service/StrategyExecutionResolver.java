@@ -130,7 +130,7 @@ public class StrategyExecutionResolver {
         }
         try {
             return StrategyType.valueOf(code);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException illegalArgumentException) {
             return null;
         }
     }

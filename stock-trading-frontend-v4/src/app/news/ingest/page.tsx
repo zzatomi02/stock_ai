@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { AppShell } from '@/components/layout/AppShell'
 import { apiDelete, apiGet, apiPost, apiPut } from '@/lib/api'
+import { notifyError, notifySuccess } from '@/lib/toast'
 
 type NewsSource = {
   id: number
@@ -48,8 +49,6 @@ export default function NewsIngestPage() {
   })
   const [loading, setLoading] = useState(false)
   const [running, setRunning] = useState(false)
-  const [err, setErr] = useState<string | null>(null)
-  const [msg, setMsg] = useState<string | null>(null)
 
   const selected = useMemo(
     () => sources.find((s) => s.id === selectedId) ?? null,
@@ -65,23 +64,21 @@ export default function NewsIngestPage() {
     void (async () => {
       try {
         await loadSources()
-      } catch (e) {
-        setErr(e instanceof Error ? e.message : String(e))
+      } catch (error) {
+        notifyError(error)
       }
     })()
   }, [])
 
   async function createSource() {
-    setErr(null)
-    setMsg(null)
     setLoading(true)
     try {
       const created = await apiPost<NewsSource>('/news/sources', form)
       await loadSources()
       setSelectedId(created.id)
-      setMsg('뉴스 소스가 추가되었습니다.')
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e))
+      notifySuccess('뉴스 소스가 추가되었습니다.')
+    } catch (error) {
+      notifyError(error)
     } finally {
       setLoading(false)
     }
@@ -89,15 +86,13 @@ export default function NewsIngestPage() {
 
   async function updateSource() {
     if (!selected) return
-    setErr(null)
-    setMsg(null)
     setLoading(true)
     try {
       await apiPut<NewsSource>(`/news/sources/${selected.id}`, form)
       await loadSources()
-      setMsg('뉴스 소스를 수정했습니다.')
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e))
+      notifySuccess('뉴스 소스를 수정했습니다.')
+    } catch (error) {
+      notifyError(error)
     } finally {
       setLoading(false)
     }
@@ -106,8 +101,6 @@ export default function NewsIngestPage() {
   async function deleteSource() {
     if (!selected) return
     if (!confirm(`소스 "${selected.name}"를 삭제할까요?`)) return
-    setErr(null)
-    setMsg(null)
     setLoading(true)
     try {
       await apiDelete(`/news/sources/${selected.id}`)
@@ -123,9 +116,9 @@ export default function NewsIngestPage() {
         requestHeadersJson: '',
         selectorConfigJson: '',
       })
-      setMsg('뉴스 소스를 삭제했습니다.')
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e))
+      notifySuccess('뉴스 소스를 삭제했습니다.')
+    } catch (error) {
+      notifyError(error)
     } finally {
       setLoading(false)
     }
@@ -133,28 +126,24 @@ export default function NewsIngestPage() {
 
   async function runOne() {
     if (!selected) return
-    setErr(null)
-    setMsg(null)
     setRunning(true)
     try {
       const out = await apiPost<{ sourceId: number; saved: number }>(`/news/sources/${selected.id}/run`, {})
-      setMsg(`수집 실행 완료: 신규 저장 ${out.saved}건`)
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e))
+      notifySuccess(`수집 실행 완료: 신규 저장 ${out.saved}건`)
+    } catch (error) {
+      notifyError(error)
     } finally {
       setRunning(false)
     }
   }
 
   async function runAll() {
-    setErr(null)
-    setMsg(null)
     setRunning(true)
     try {
       const out = await apiPost<{ saved: number }>(`/news/sources/run-all`, {})
-      setMsg(`전체 소스 수집 실행 완료: 신규 저장 ${out.saved}건`)
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e))
+      notifySuccess(`전체 소스 수집 실행 완료: 신규 저장 ${out.saved}건`)
+    } catch (error) {
+      notifyError(error)
     } finally {
       setRunning(false)
     }
@@ -320,8 +309,6 @@ export default function NewsIngestPage() {
           </div>
         </div>
 
-        {err ? <p style={{ color: '#f87171', marginTop: 16 }}>{err}</p> : null}
-        {msg ? <p style={{ color: '#6ee7b7', marginTop: 12, fontSize: 14 }}>{msg}</p> : null}
       </section>
     </AppShell>
   )

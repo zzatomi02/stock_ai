@@ -60,9 +60,9 @@ public class DartOpenApiClient {
                         tree.path("message").asText());
             }
             return tree;
-        } catch (Exception e) {
-            log.error("【DART】 list.json 실패 corp={}: {}", corpCode, e.getMessage());
-            throw new IllegalStateException("DART 공시 목록 조회 실패: " + e.getMessage(), e);
+        } catch (Exception exception) {
+            log.error("【DART】 list.json 실패 corp={}: {}", corpCode, exception.getMessage());
+            throw new IllegalStateException("DART 공시 목록 조회 실패: " + exception.getMessage(), exception);
         }
     }
 }

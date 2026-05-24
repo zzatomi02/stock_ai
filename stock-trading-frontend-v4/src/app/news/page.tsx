@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { AppShell } from '@/components/layout/AppShell'
 import { DateRangeFilter } from '@/components/common/DateRangeFilter'
 import { apiDelete, apiGet, apiPost, apiPut } from '@/lib/api'
+import { notifyError, notifyInfo, notifySuccess, notifyWarning } from '@/lib/toast'
 import { useCallback, useEffect, useState } from 'react'
 
 type KeywordRule = {
@@ -34,8 +35,6 @@ const emptyForm = () => ({
 export default function NewsPage() {
   const [rules, setRules] = useState<KeywordRule[]>([])
   const [loading, setLoading] = useState(true)
-  const [msg, setMsg] = useState<string | null>(null)
-  const [err, setErr] = useState<string | null>(null)
 
   const [form, setForm] = useState(emptyForm)
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -48,13 +47,12 @@ export default function NewsPage() {
   const [pvLoading, setPvLoading] = useState(false)
 
   const load = useCallback(async () => {
-    setErr(null)
     setLoading(true)
     try {
       const r = await apiGet<KeywordRule[]>('/news/rules')
       setRules(Array.isArray(r) ? r : [])
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e))
+    } catch (error) {
+      notifyError(error)
       setRules([])
     } finally {
       setLoading(false)
@@ -67,11 +65,9 @@ export default function NewsPage() {
 
   async function createRule() {
     if (!form.keyword.trim()) {
-      setErr('키워드를 입력하세요.')
+      notifyWarning('키워드를 입력하세요.')
       return
     }
-    setMsg(null)
-    setErr(null)
     try {
       await apiPost('/news/rules', {
         keyword: form.keyword.trim(),
@@ -79,11 +75,11 @@ export default function NewsPage() {
         polarity: form.polarity.trim(),
         description: form.description.trim() || undefined,
       })
-      setMsg('규칙이 추가되었습니다. (백엔드 로그: 【NEWS-KEYWORD】)')
+      notifySuccess('규칙이 추가되었습니다. (백엔드 로그: 【NEWS-KEYWORD】)')
       setForm(emptyForm())
       await load()
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e))
+    } catch (error) {
+      notifyError(error)
     }
   }
 
@@ -100,8 +96,6 @@ export default function NewsPage() {
 
   async function saveEdit() {
     if (editingId == null) return
-    setMsg(null)
-    setErr(null)
     try {
       await apiPut(`/news/rules/${editingId}`, {
         keyword: editForm.keyword.trim(),
@@ -110,32 +104,29 @@ export default function NewsPage() {
         description: editForm.description.trim() || null,
         active: editForm.active,
       })
-      setMsg('규칙이 수정되었습니다.')
+      notifySuccess('규칙이 수정되었습니다.')
       setEditingId(null)
       await load()
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e))
+    } catch (error) {
+      notifyError(error)
     }
   }
 
   async function remove(id: number) {
     if (!window.confirm('이 키워드 규칙을 삭제할까요?')) return
-    setMsg(null)
-    setErr(null)
     try {
       await apiDelete(`/news/rules/${id}`)
       if (editingId === id) setEditingId(null)
-      setMsg('삭제되었습니다.')
+      notifySuccess('삭제되었습니다.')
       await load()
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e))
+    } catch (error) {
+      notifyError(error)
     }
   }
 
   async function runPreview() {
     setPreview(null)
     setPvLoading(true)
-    setErr(null)
     try {
       const r = await apiPost<ScorePreview>('/news/score/preview', {
         stockCode: pvStock,
@@ -143,9 +134,9 @@ export default function NewsPage() {
         summary: pvSummary,
       })
       setPreview(r)
-      setMsg('미리보기 완료 (저장 아님). 콘솔에 【NEWS-KEYWORD】 키워드 미리보기 로그가 남습니다.')
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e))
+      notifyInfo('미리보기 완료 (저장 아님). 콘솔에 【NEWS-KEYWORD】 키워드 미리보기 로그가 남습니다.')
+    } catch (error) {
+      notifyError(error)
     } finally {
       setPvLoading(false)
     }
@@ -167,8 +158,6 @@ export default function NewsPage() {
             Naver 뉴스 수집
           </Link>
         </p>
-        {err ? <p style={{ color: '#f87171' }}>{err}</p> : null}
-        {msg ? <p style={{ color: '#6ee7b7' }}>{msg}</p> : null}
         <p style={{ marginTop: 8 }}>
           <button type="button" className="button button--ghost" onClick={() => void load()} disabled={loading}>
             {loading ? '로딩…' : '목록 새로고침'}

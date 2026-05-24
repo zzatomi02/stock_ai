@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AppShell } from '@/components/layout/AppShell'
 import { apiGet, apiPost } from '@/lib/api'
+import { notifyError, notifyInfo, notifySuccess, notifyWarning } from '@/lib/toast'
 
 type AuthUser = {
   userId: string
@@ -30,7 +31,6 @@ const inputStyle = {
 
 export default function AuthPage() {
   const router = useRouter()
-  const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
   const [signup, setSignup] = useState({ username: '', password: '', email: '', displayName: '' })
   const [usernameCheck, setUsernameCheck] = useState<{
@@ -62,7 +62,6 @@ export default function AuthPage() {
       return
     }
     setUsernameChecking(true)
-    setMsg('')
     try {
       const res = await apiGet<{ available: boolean; username: string }>(
         `/auth/check-username?username=${encodeURIComponent(raw)}`,
@@ -72,10 +71,10 @@ export default function AuthPage() {
         message: res.available ? '사용 가능한 아이디입니다.' : '이미 사용 중인 아이디입니다.',
         verifiedUsername: res.username,
       })
-    } catch (e) {
+    } catch (error) {
       setUsernameCheck({
         available: false,
-        message: e instanceof Error ? e.message : String(e),
+        message: error instanceof Error ? error.message : String(error),
         verifiedUsername: raw,
       })
     } finally {
@@ -90,20 +89,19 @@ export default function AuthPage() {
 
   async function doSignup() {
     if (!usernameVerified) {
-      setMsg('아이디 중복 확인을 먼저 해 주세요. (사용 가능해야 회원가입할 수 있습니다)')
+      notifyWarning('아이디 중복 확인을 먼저 해 주세요. (사용 가능해야 회원가입할 수 있습니다)')
       return
     }
     setLoading(true)
-    setMsg('')
     try {
       const user = await apiPost<AuthUser>('/auth/signup', signup)
       writeCookie('user-id', user.userId)
       writeCookie('user-name', user.displayName || user.username)
-      setMsg(`회원가입 및 로그인 완료: ${user.username}`)
+      notifySuccess(`회원가입 및 로그인 완료: ${user.username}`)
       router.push('/settings')
       router.refresh()
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+    } catch (error) {
+      notifyError(error)
     } finally {
       setLoading(false)
     }
@@ -111,16 +109,15 @@ export default function AuthPage() {
 
   async function doLogin() {
     setLoading(true)
-    setMsg('')
     try {
       const user = await apiPost<AuthUser>('/auth/login', login)
       writeCookie('user-id', user.userId)
       writeCookie('user-name', user.displayName || user.username)
-      setMsg(`로그인 완료: ${user.username}`)
+      notifySuccess(`로그인 완료: ${user.username}`)
       router.push('/settings')
       router.refresh()
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+    } catch (error) {
+      notifyError(error)
     } finally {
       setLoading(false)
     }
@@ -128,7 +125,6 @@ export default function AuthPage() {
 
   async function requestFindUsername() {
     setLoading(true)
-    setMsg('')
     try {
       const res = await apiPost<{ sent: boolean; message: string; devMailConfigured?: boolean }>(
         '/auth/find-username',
@@ -138,9 +134,9 @@ export default function AuthPage() {
         res.devMailConfigured === false
           ? ' (메일 미설정: 백엔드 로그 [FIND-USERNAME] 확인)'
           : ''
-      setMsg((res.message || '아이디 안내 메일을 발송했습니다.') + devHint)
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+      notifySuccess((res.message || '아이디 안내 메일을 발송했습니다.') + devHint)
+    } catch (error) {
+      notifyError(error)
     } finally {
       setLoading(false)
     }
@@ -148,7 +144,6 @@ export default function AuthPage() {
 
   async function requestResetCode() {
     setLoading(true)
-    setMsg('')
     try {
       const res = await apiPost<{ sent: boolean; message: string; devMailConfigured?: boolean }>(
         '/auth/password-reset/request',
@@ -159,9 +154,9 @@ export default function AuthPage() {
         res.devMailConfigured === false
           ? ' (메일 미설정: 백엔드 로그에서 [PASSWORD-RESET] 인증번호를 확인하세요.)'
           : ''
-      setMsg((res.message || '인증번호를 발송했습니다.') + devHint)
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+      notifySuccess((res.message || '인증번호를 발송했습니다.') + devHint)
+    } catch (error) {
+      notifyError(error)
     } finally {
       setLoading(false)
     }
@@ -169,11 +164,10 @@ export default function AuthPage() {
 
   async function confirmReset() {
     if (reset.newPassword !== reset.confirmPassword) {
-      setMsg('새 비밀번호가 일치하지 않습니다.')
+      notifyWarning('새 비밀번호가 일치하지 않습니다.')
       return
     }
     setLoading(true)
-    setMsg('')
     try {
       await apiPost('/auth/password-reset/confirm', {
         email: reset.email,
@@ -182,9 +176,9 @@ export default function AuthPage() {
       })
       setResetStep('idle')
       setReset({ email: reset.email, code: '', newPassword: '', confirmPassword: '' })
-      setMsg('비밀번호가 변경되었습니다. 새 비밀번호로 로그인해 주세요.')
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+      notifySuccess('비밀번호가 변경되었습니다. 새 비밀번호로 로그인해 주세요.')
+    } catch (error) {
+      notifyError(error)
     } finally {
       setLoading(false)
     }
@@ -192,14 +186,13 @@ export default function AuthPage() {
 
   async function loadMe() {
     setLoading(true)
-    setMsg('')
     try {
       const user = await apiGet<AuthUser>('/auth/me')
       setMe(user)
-      setMsg(`현재 로그인 사용자: ${user.username}`)
-    } catch (e) {
+      notifyInfo(`현재 로그인 사용자: ${user.username}`)
+    } catch (error) {
       setMe(null)
-      setMsg(e instanceof Error ? e.message : String(e))
+      notifyError(error)
     } finally {
       setLoading(false)
     }
@@ -209,7 +202,7 @@ export default function AuthPage() {
     clearCookie('user-id')
     clearCookie('user-name')
     setMe(null)
-    setMsg('로그아웃되었습니다.')
+    notifyInfo('로그아웃되었습니다.')
     router.refresh()
   }
 
@@ -421,7 +414,6 @@ export default function AuthPage() {
             </p>
           ) : null}
         </div>
-        {msg ? <p style={{ marginTop: 12, color: '#475467' }}>{msg}</p> : null}
       </section>
     </AppShell>
   )

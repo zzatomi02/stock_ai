@@ -19,23 +19,26 @@ public class StrategyAnalysisController {
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     private final StrategyAnalysisService strategyAnalysisService;
+
     @PostMapping("/article/{articleId}")
     public ApiResponse<?> analyzeArticle(
             @PathVariable("articleId") long articleId,
             @RequestParam(name = "evaluatedAt", required = false)
                     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
                     LocalDateTime evaluatedAt) {
-        LocalDateTime at = evaluatedAt != null ? evaluatedAt.atZone(KST).toLocalDateTime() : LocalDateTime.now(KST);
-        var results = strategyAnalysisService.analyzeArticle(articleId, at);
-        long candidates = results.stream().filter(r -> "CANDIDATE".equals(r.status())).count();
+        LocalDateTime evaluationTime =
+                evaluatedAt != null ? evaluatedAt.atZone(KST).toLocalDateTime() : LocalDateTime.now(KST);
+        var analysisResults = strategyAnalysisService.analyzeArticle(articleId, evaluationTime);
+        long candidateCount =
+                analysisResults.stream().filter(result -> "CANDIDATE".equals(result.status())).count();
         return ApiResponse.ok(
                 Map.of(
                         "articleId",
                         articleId,
                         "candidateCount",
-                        candidates,
+                        candidateCount,
                         "results",
-                        results.stream().map(r -> r.toMap()).toList()),
+                        analysisResults.stream().map(result -> result.toMap()).toList()),
                 "전략별 분석 완료");
     }
 
@@ -45,9 +48,10 @@ public class StrategyAnalysisController {
             @RequestParam(name = "evaluatedAt", required = false)
                     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
                     LocalDateTime evaluatedAt) {
-        LocalDateTime at = evaluatedAt != null ? evaluatedAt.atZone(KST).toLocalDateTime() : LocalDateTime.now(KST);
+        LocalDateTime evaluationTime =
+                evaluatedAt != null ? evaluatedAt.atZone(KST).toLocalDateTime() : LocalDateTime.now(KST);
         return ApiResponse.ok(
-                strategyAnalysisService.analyzeRecentArticles(hours, at),
+                strategyAnalysisService.analyzeRecentArticles(hours, evaluationTime),
                 "최근 기사 전략 분석 완료");
     }
 
@@ -55,16 +59,16 @@ public class StrategyAnalysisController {
     public ApiResponse<?> signals(
             @RequestParam(name = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam(name = "status", defaultValue = "CANDIDATE") String status) {
-        LocalDate d = date != null ? date : LocalDate.now(KST);
-        var list = strategyAnalysisService.listSignals(d, status);
+        LocalDate tradeDate = date != null ? date : LocalDate.now(KST);
+        var signalList = strategyAnalysisService.listSignals(tradeDate, status);
         return ApiResponse.ok(
                 Map.of(
                         "tradeDate",
-                        d.toString(),
+                        tradeDate.toString(),
                         "status",
                         status,
                         "items",
-                        list.stream().map(s -> s.toSummaryMap()).toList()));
+                        signalList.stream().map(signal -> signal.toSummaryMap()).toList()));
     }
 
     @GetMapping("/signals/{id}")
@@ -74,12 +78,12 @@ public class StrategyAnalysisController {
 
     @GetMapping("/article/{articleId}/signals")
     public ApiResponse<?> signalsByArticle(@PathVariable("articleId") long articleId) {
-        var list = strategyAnalysisService.listByArticle(articleId);
+        var signalList = strategyAnalysisService.listByArticle(articleId);
         return ApiResponse.ok(
                 Map.of(
                         "articleId",
                         articleId,
                         "items",
-                        list.stream().map(s -> s.toSummaryMap()).toList()));
+                        signalList.stream().map(signal -> signal.toSummaryMap()).toList()));
     }
 }

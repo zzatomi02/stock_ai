@@ -48,7 +48,7 @@ public class AiPromptTemplateApiController {
             String num = v.replaceAll("[^0-9.]", "");
             double d = Double.parseDouble(num);
             return "v" + (d + 0.1);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             return v + ".1";
         }
     }

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { apiPost } from '@/lib/api'
+import { notifyError, notifySuccess, notifyWarning } from '@/lib/toast'
 
 /** KIS 주문 본문 (output 등 중첩 가능) */
 type KisBody = { rt_cd?: string; msg1?: string; msg2?: string; [key: string]: unknown }
@@ -23,8 +24,6 @@ function readRtCd(k: KisBody | undefined): string {
 
 export function PaperBuyTestButton({ stockCode, stockName }: { stockCode: string; stockName: string }) {
   const [loading, setLoading] = useState(false)
-  const [msg, setMsg] = useState<string | null>(null)
-  const [err, setErr] = useState<string | null>(null)
   const [qtyInput, setQtyInput] = useState('1')
   const [reason, setReason] = useState('')
 
@@ -53,8 +52,6 @@ export function PaperBuyTestButton({ stockCode, stockName }: { stockCode: string
       return
     }
     setLoading(true)
-    setMsg(null)
-    setErr(null)
     try {
       const path = buildPath(side)
       const data = await apiPost<BrokerOrderData>(path, {}, undefined, { tradingMode: 'paper' })
@@ -62,16 +59,16 @@ export function PaperBuyTestButton({ stockCode, stockName }: { stockCode: string
       const code = readRtCd(kis)
       const attempt = data?.attemptId != null ? ` · 시도 #${data.attemptId}` : ''
       if (String(code) === '0') {
-        setMsg(`모의투자 시장가 ${verb} 접수( rt_cd=0 )${attempt}`)
+        notifySuccess(`모의투자 시장가 ${verb} 접수( rt_cd=0 )${attempt}`)
       } else {
         const m1 = kis?.msg1 != null ? String(kis.msg1) : ''
-        setMsg(
+        notifyWarning(
           m1 ||
-            `KIS: rt_cd=${code || '—'}${attempt} — ${JSON.stringify(kis ?? data).slice(0, 500)}`
+            `KIS: rt_cd=${code || '—'}${attempt} — ${JSON.stringify(kis ?? data).slice(0, 500)}`,
         )
       }
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e))
+    } catch (error) {
+      notifyError(error)
     } finally {
       setLoading(false)
     }
@@ -115,8 +112,6 @@ export function PaperBuyTestButton({ stockCode, stockName }: { stockCode: string
         onChange={(e) => setReason(e.target.value)}
         style={{ resize: 'vertical', minHeight: 48, fontFamily: 'inherit' }}
       />
-      {msg ? <p style={{ color: '#027a48', marginTop: 8, fontSize: 14 }}>{msg}</p> : null}
-      {err ? <p style={{ color: '#b42318', marginTop: 8, fontSize: 14 }}>{err}</p> : null}
       <p style={{ color: '#667085', fontSize: 12, marginTop: 6 }}>
         로그인(쿠키 user-id)과 설정에 저장한 <b>모의투자</b> KIS appKey / appSecret / 계좌가 있어야 합니다.
       </p>

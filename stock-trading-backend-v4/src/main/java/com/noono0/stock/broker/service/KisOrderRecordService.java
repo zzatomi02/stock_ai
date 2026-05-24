@@ -3,6 +3,7 @@ package com.noono0.stock.broker.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.noono0.stock.broker.domain.BrokerOrderAttempt;
 import com.noono0.stock.broker.mapper.BrokerOrderAttemptMapper;
+import com.noono0.stock.execution.OrderGateway;
 import com.noono0.stock.integration.kis.config.KisProperties;
 import com.noono0.stock.integration.kis.service.KisBrokerService;
 import com.noono0.stock.risk.RiskGate;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.noono0.stock.integration.kis.KisEffectiveMode.from;
+import static com.noono0.stock.integration.kis.KisEffectiveMode.fromConfigOnly;
 
 /**
  * KIS 시장가 주문 후 {@link BrokerOrderAttempt}에 원문·사유를 남긴다.
@@ -29,6 +31,7 @@ public class KisOrderRecordService {
     private final BrokerOrderAttemptMapper brokerOrderAttemptMapper;
     private final KisProperties kisProperties;
     private final RiskGate riskGate;
+    private final OrderGateway orderGateway;
 
     public record OrderWithAttempt(JsonNode kis, Long attemptId, String clientOrderKey) {}
 
@@ -39,6 +42,61 @@ public class KisOrderRecordService {
     public OrderWithAttempt placeBuy(
             HttpServletRequest req, String pdno, int qty, String reasoning, Long signalId) {
         return placeBuy(req, pdno, qty, reasoning, signalId, null);
+    }
+
+    /** 종목 추천 승인 후 매수. clientOrderKey = SS-{signalId}. */
+    public OrderWithAttempt placeBuyForApprovedRecommendation(
+            long strategySignalId,
+            String pdno,
+            int qty,
+            String reasoning,
+            String strategyType) {
+        String mode = orderGateway.currentPhase().kisMode();
+        orderGateway.assertApprovalOrderAllowed(mode);
+        return executeStrategySignalBuy(strategySignalId, pdno, qty, reasoning, strategyType, mode, "승인 매수");
+    }
+
+    /** PAPER_AUTO / REAL_AUTO 종목 추천 자동 매수. */
+    public OrderWithAttempt placeBuyForStrategySignalAuto(
+            long strategySignalId,
+            String pdno,
+            int qty,
+            String reasoning,
+            String strategyType) {
+        String mode = orderGateway.currentPhase().kisMode();
+        orderGateway.assertAutoTradeAllowed();
+        if (!mode.equalsIgnoreCase(fromConfigOnly(kisProperties))) {
+            throw new com.noono0.stock.execution.OrderGatewayException(
+                    "app.kis.mode("
+                            + fromConfigOnly(kisProperties)
+                            + ") 와 실행 단계("
+                            + mode
+                            + ")가 일치해야 합니다.");
+        }
+        return executeStrategySignalBuy(strategySignalId, pdno, qty, reasoning, strategyType, mode, "자동 매수");
+    }
+
+    private OrderWithAttempt executeStrategySignalBuy(
+            long strategySignalId,
+            String pdno,
+            int qty,
+            String reasoning,
+            String strategyType,
+            String mode,
+            String logLabel) {
+        validateBeforeOrder(null, pdno, "BUY", strategySignalId, mode, qty, strategyType);
+        log.info(
+                "【BROKER-ORDER】 ═══ {} ═══ signalId={} mode={} pdno={} qty={}",
+                logLabel,
+                strategySignalId,
+                mode,
+                pdno,
+                qty);
+        JsonNode r = kisBrokerService.orderBuyMarket(null, pdno, qty);
+        log.info("【BROKER-ORDER】   ↳ KIS 응답 rt_cd={} ({})", rtCd(r), logLabel);
+        OrderWithAttempt out = saveForStrategySignal(strategySignalId, pdno, qty, reasoning, r, mode);
+        afterOrderAccepted(null, pdno, "BUY", qty, strategyType);
+        return out;
     }
 
     public OrderWithAttempt placeBuy(
@@ -127,6 +185,29 @@ public class KisOrderRecordService {
         var list = brokerOrderAttemptMapper.findRecent(n);
         log.info("【BROKER-ORDER】 주문 시도 이력 조회 ★ limit={} → {}건", n, list.size());
         return list;
+    }
+
+    private OrderWithAttempt saveForStrategySignal(
+            long strategySignalId, String pdno, int qty, String reasoning, JsonNode kis, String mode) {
+        BrokerOrderAttempt b = new BrokerOrderAttempt();
+        b.setClientOrderKey("SS-" + strategySignalId);
+        b.setStockCode(pdno);
+        b.setSide("BUY");
+        b.setQuantity(qty);
+        b.setMode(mode);
+        b.setRawResponse(kis != null ? kis.toString() : "");
+        b.setReasoning(StringUtils.hasText(reasoning) ? reasoning.trim() : null);
+        b.setSignalId(strategySignalId);
+        b.setReasonSnapshot(StringUtils.hasText(reasoning) ? reasoning.trim() : null);
+        b.setCreatedAt(LocalDateTime.now());
+        brokerOrderAttemptMapper.insert(b);
+        log.info(
+                "【BROKER-ORDER】 ★ 시그널 DB 기록 ★ id={} signalId={} key={} rt_cd={}",
+                b.getId(),
+                strategySignalId,
+                b.getClientOrderKey(),
+                rtCd(kis));
+        return new OrderWithAttempt(kis, b.getId(), b.getClientOrderKey());
     }
 
     private OrderWithAttempt save(

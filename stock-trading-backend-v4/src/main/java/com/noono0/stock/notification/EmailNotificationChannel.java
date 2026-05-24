@@ -39,8 +39,8 @@ public class EmailNotificationChannel implements NotificationChannel {
             msg.setText(event.body());
             mailSender.send(msg);
             log.info("[NOTIFY-EMAIL] 발송 완료 type={}", event.type());
-        } catch (Exception e) {
-            log.warn("[NOTIFY-EMAIL] 발송 실패: {}", e.getMessage());
+        } catch (Exception exception) {
+            log.warn("[NOTIFY-EMAIL] 발송 실패: {}", exception.getMessage());
         }
     }
 }

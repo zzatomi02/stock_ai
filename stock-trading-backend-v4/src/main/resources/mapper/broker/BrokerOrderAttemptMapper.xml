@@ -48,4 +48,10 @@
       AND side = #{side}
       AND created_at &gt; #{after}
   </select>
+
+  <select id="countBySignalId" resultType="int">
+    SELECT COUNT(*)
+    FROM broker_order_attempt
+    WHERE signal_id = #{signalId}
+  </select>
 </mapper>

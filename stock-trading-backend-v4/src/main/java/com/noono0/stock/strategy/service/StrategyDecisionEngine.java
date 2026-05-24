@@ -264,7 +264,7 @@ public class StrategyDecisionEngine {
                 case NEWS_THEME -> "ANALYSIS";
                 default -> inferSide(article);
             };
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException illegalArgumentException) {
             return null;
         }
     }

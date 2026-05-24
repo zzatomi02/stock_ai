@@ -25,9 +25,13 @@ public class TradingSignalService {
     private final OrderGateway orderGateway;
 
     public Map<String, Object> platformStatus() {
+        var phase = orderGateway.currentPhase();
         return Map.of(
-                "executionPhase", orderGateway.currentPhase().name(),
-                "observeOnly", orderGateway.allowsSignalOnly());
+                "executionPhase", phase.name(),
+                "executionPhaseLabel", phase.labelKo(),
+                "observeOnly", orderGateway.allowsSignalOnly(),
+                "requiresApproval", orderGateway.requiresHumanApproval(),
+                "allowsAutoOrder", phase.allowsAutoOrder());
     }
 
     public List<TradingSignal> listByGrade(String grade, int limit) {

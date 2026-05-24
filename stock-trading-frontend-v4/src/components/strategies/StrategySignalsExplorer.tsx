@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
 import { apiGet, apiPost } from '@/lib/api'
+import { notifyError, notifyInfo, notifySuccess } from '@/lib/toast'
 
 type SignalSummary = {
   id: number
@@ -60,6 +61,8 @@ function num(v: number | string | null | undefined): string {
 
 function statusColor(status: string): string {
   if (status === 'CANDIDATE') return '#067647'
+  if (status === 'ORDERED') return '#175CD3'
+  if (status === 'ORDER_FAILED') return '#B42318'
   if (status === 'REJECTED') return '#B42318'
   return '#B54708'
 }
@@ -68,7 +71,6 @@ export function StrategySignalsExplorer() {
   const [status, setStatus] = useState<(typeof STATUS_TABS)[number]>('CANDIDATE')
   const [signals, setSignals] = useState<SignalSummary[]>([])
   const [loading, setLoading] = useState(false)
-  const [msg, setMsg] = useState('')
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [detail, setDetail] = useState<SignalDetail | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
@@ -76,15 +78,14 @@ export function StrategySignalsExplorer() {
 
   const loadSignals = useCallback(async () => {
     setLoading(true)
-    setMsg('')
     try {
       const data = await apiGet<SignalsListResponse>(
         `/strategies/analysis/signals?status=${status}`,
       )
       setSignals(data.items ?? [])
-      setMsg(`${data.tradeDate ?? '오늘'} · ${status} ${data.items?.length ?? 0}건`)
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+      notifyInfo(`${data.tradeDate ?? '오늘'} · ${status} ${data.items?.length ?? 0}건`)
+    } catch (error) {
+      notifyError(error)
     } finally {
       setLoading(false)
     }
@@ -96,15 +97,15 @@ export function StrategySignalsExplorer() {
     setDetail(null)
   }, [loadSignals])
 
-  async function openDetail(id: number) {
-    setSelectedId(id)
+  async function openDetail(signalId: number) {
+    setSelectedId(signalId)
     setDetailLoading(true)
     setDetail(null)
     try {
-      const d = await apiGet<SignalDetail>(`/strategies/analysis/signals/${id}`)
-      setDetail(d)
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+      const signalDetail = await apiGet<SignalDetail>(`/strategies/analysis/signals/${signalId}`)
+      setDetail(signalDetail)
+    } catch (error) {
+      notifyError(error)
     } finally {
       setDetailLoading(false)
     }
@@ -115,10 +116,10 @@ export function StrategySignalsExplorer() {
     setLoading(true)
     try {
       await apiPost(`/strategies/analysis/article/${articleId.trim()}`, {})
-      setMsg('기사 분석 완료')
+      notifySuccess('기사 분석 완료')
       await loadSignals()
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+    } catch (error) {
+      notifyError(error)
     } finally {
       setLoading(false)
     }
@@ -132,7 +133,11 @@ export function StrategySignalsExplorer() {
         <Link href="/signals" style={{ color: '#1570EF' }}>
           레거시 매매 시그널
         </Link>
-        과는 별도입니다.
+        과는 별도입니다. 매수·승인은{' '}
+        <Link href="/recommendations" style={{ color: '#1570EF' }}>
+          종목 추천
+        </Link>
+        메뉴에서 하세요.
       </p>
 
       <div style={{ marginTop: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -163,8 +168,6 @@ export function StrategySignalsExplorer() {
           새로고침
         </button>
       </div>
-
-      {msg ? <p style={{ marginTop: 10, color: '#475467', fontSize: 14 }}>{msg}</p> : null}
 
       {signals.length > 0 ? (
         <div style={{ marginTop: 16, overflowX: 'auto' }}>
@@ -245,9 +248,16 @@ function DetailPanel({
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h3 style={{ margin: 0, fontSize: 16 }}>시그널 상세 #{selectedId}</h3>
-        <button className="button" type="button" onClick={onClose}>
-          닫기
-        </button>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {detail?.status === 'CANDIDATE' && detail.side === 'BUY' ? (
+            <Link href="/recommendations" className="button" style={{ textDecoration: 'none' }}>
+              종목 추천에서 승인
+            </Link>
+          ) : null}
+          <button className="button" type="button" onClick={onClose}>
+            닫기
+          </button>
+        </div>
       </div>
       {detailLoading ? (
         <p style={{ marginTop: 12, color: '#667085' }}>불러오는 중…</p>

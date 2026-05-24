@@ -112,13 +112,13 @@ public class KisOAuthClient {
                         Math.max(60, expSec - 120),
                         prefix);
                 return tok;
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 log.error(
                         "【KIS-TOKEN】 ★ 예외 ★ mode={} — {}",
                         safeMode,
-                        e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
-                if (e instanceof RuntimeException re) throw re;
-                throw new IllegalStateException(e);
+                        exception.getMessage() != null ? exception.getMessage() : exception.getClass().getSimpleName());
+                if (exception instanceof RuntimeException re) throw re;
+                throw new IllegalStateException(exception);
             }
         }
     }
@@ -130,7 +130,7 @@ public class KisOAuthClient {
     private static String responseBodyUtf8(RestClientResponseException ex) {
         try {
             return ex.getResponseBodyAsString(StandardCharsets.UTF_8);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             return ex.getMessage() != null ? ex.getMessage() : "";
         }
     }

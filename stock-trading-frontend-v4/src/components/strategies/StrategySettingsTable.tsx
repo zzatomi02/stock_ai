@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { OnOffBadge } from '@/components/strategies/OnOffBadge'
 import { apiGet, apiPost, apiPut } from '@/lib/api'
+import { notifyError, notifySuccess } from '@/lib/toast'
 import { strategyLabel, todayKst } from '@/lib/strategy-labels'
 
 type MasterRow = {
@@ -23,7 +24,6 @@ export function StrategySettingsTable() {
   const [rows, setRows] = useState<MasterRow[]>([])
   const [runtime, setRuntime] = useState<Record<string, RuntimeRow>>({})
   const [loading, setLoading] = useState(false)
-  const [msg, setMsg] = useState('')
   const [editType, setEditType] = useState<string | null>(null)
   const [editBase, setEditBase] = useState(true)
   const [editToday, setEditToday] = useState(true)
@@ -33,7 +33,6 @@ export function StrategySettingsTable() {
 
   const load = useCallback(async () => {
     setLoading(true)
-    setMsg('')
     try {
       const [masters, runtimes] = await Promise.all([
         apiGet<MasterRow[]>('/strategy-settings'),
@@ -45,8 +44,8 @@ export function StrategySettingsTable() {
         map[r.strategyType] = r
       }
       setRuntime(map)
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+    } catch (error) {
+      notifyError(error)
     } finally {
       setLoading(false)
     }
@@ -83,9 +82,9 @@ export function StrategySettingsTable() {
       })
       setEditType(null)
       await load()
-      setMsg('저장되었습니다.')
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+      notifySuccess('저장되었습니다.')
+    } catch (error) {
+      notifyError(error)
     } finally {
       setLoading(false)
     }
@@ -102,9 +101,9 @@ export function StrategySettingsTable() {
         updatedBy: 'ui',
       })
       await load()
-      setMsg(`${strategyLabel(strategyType)} 오늘 OFF`)
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e))
+      notifySuccess(`${strategyLabel(strategyType)} 오늘 OFF`)
+    } catch (error) {
+      notifyError(error)
     } finally {
       setLoading(false)
     }
@@ -115,7 +114,6 @@ export function StrategySettingsTable() {
       <p style={{ marginTop: 8, color: '#667085', fontSize: 14 }}>
         거래일 {tradeDate} · 오늘 임시 설정이 없으면 기본 ON/OFF를 따릅니다.
       </p>
-      {msg ? <p style={{ marginTop: 8, color: '#475467' }}>{msg}</p> : null}
       <div style={{ marginTop: 12, overflowX: 'auto' }}>
         <table className="table">
           <thead>

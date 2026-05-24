@@ -28,8 +28,8 @@ export default async function PortfolioPage() {
         })
         .filter((r: any) => r.qty > 0)
     }
-  } catch (e) {
-    message = e instanceof Error ? e.message : String(e)
+  } catch (error) {
+    message = error instanceof Error ? error.message : String(error)
   }
 
   return (

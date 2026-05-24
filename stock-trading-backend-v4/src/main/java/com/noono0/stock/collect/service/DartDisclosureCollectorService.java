@@ -31,12 +31,12 @@ public class DartDisclosureCollectorService {
             saved = disclosureCollectService.collectRecent(stockCode, lookbackDays);
             collectLogService.finishJob(
                     job, 1, saved, saved, 0, 0, 0, CollectJobStatus.SUCCESS, "lookbackDays=" + lookbackDays);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             errors = 1;
             collectLogService.logError(
-                    JOB_NAME, PROVIDER, "STOCK_CODE", stockCode, e.getClass().getSimpleName(), e.getMessage(), e, null, null);
-            collectLogService.finishJob(job, 1, 0, 0, 0, 0, errors, CollectJobStatus.FAILED, e.getMessage());
-            log.warn("DART 공시 수집 실패 stock={}: {}", stockCode, e.getMessage());
+                    JOB_NAME, PROVIDER, "STOCK_CODE", stockCode, exception.getClass().getSimpleName(), exception.getMessage(), exception, null, null);
+            collectLogService.finishJob(job, 1, 0, 0, 0, 0, errors, CollectJobStatus.FAILED, exception.getMessage());
+            log.warn("DART 공시 수집 실패 stock={}: {}", stockCode, exception.getMessage());
         }
         return saved;
     }

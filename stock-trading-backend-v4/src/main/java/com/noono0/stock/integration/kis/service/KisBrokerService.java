@@ -301,9 +301,9 @@ public class KisBrokerService {
             return new VolumeRankPage(body, trCont);
         } catch (RestClientResponseException ex) {
             return new VolumeRankPage(kisHttpError("거래량순위(/quotations/volume-rank)", ex), null);
-        } catch (Exception e) {
-            log.error("【KIS-REST】 ★ 거래량순위 ★ {}", e.getMessage(), e);
-            return new VolumeRankPage(error(e.getMessage()), null);
+        } catch (Exception exception) {
+            log.error("【KIS-REST】 ★ 거래량순위 ★ {}", exception.getMessage(), exception);
+            return new VolumeRankPage(error(exception.getMessage()), null);
         }
     }
 
@@ -342,9 +342,9 @@ public class KisBrokerService {
                     continue;
                 }
                 return kisHttpError("GET " + path, ex, body);
-            } catch (RestClientException | java.io.IOException e) {
-                log.error("【KIS-REST】 ★ GET {} ★ {}", path, e.getMessage(), e);
-                return error(e.getMessage());
+            } catch (RestClientException | java.io.IOException exception) {
+                log.error("【KIS-REST】 ★ GET {} ★ {}", path, exception.getMessage(), exception);
+                return error(exception.getMessage());
             }
         }
         return error("KIS GET 재시도 실패: " + path);
@@ -376,8 +376,8 @@ public class KisBrokerService {
                             .retrieve()
                             .body(String.class);
             return om.readTree(res);
-        } catch (Exception e) {
-            return error(e.getMessage());
+        } catch (Exception exception) {
+            return error(exception.getMessage());
         }
     }
 
@@ -454,8 +454,8 @@ public class KisBrokerService {
     private static String responseBodyUtf8(RestClientResponseException ex) {
         try {
             return ex.getResponseBodyAsString(StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            return "(응답 본문 읽기 실패) " + e.getMessage();
+        } catch (Exception exception) {
+            return "(응답 본문 읽기 실패) " + exception.getMessage();
         }
     }
 

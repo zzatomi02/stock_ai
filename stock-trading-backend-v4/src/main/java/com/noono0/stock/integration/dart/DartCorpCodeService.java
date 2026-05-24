@@ -51,9 +51,9 @@ public class DartCorpCodeService {
             stockToCorp.putAll(parsed);
             loadedAt = Instant.now();
             log.info("【DART】 corp_code 매핑 갱신 완료 종목 수={}", parsed.size());
-        } catch (Exception e) {
-            log.error("【DART】 corp_code 갱신 실패: {}", e.getMessage());
-            throw new IllegalStateException("DART corp_code 갱신 실패", e);
+        } catch (Exception exception) {
+            log.error("【DART】 corp_code 갱신 실패: {}", exception.getMessage());
+            throw new IllegalStateException("DART corp_code 갱신 실패", exception);
         }
     }
 

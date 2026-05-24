@@ -63,7 +63,7 @@ public class AiProxyController {
         }
         try {
             return objectMapper.readTree(raw);
-        } catch (Exception e) {
+        } catch (Exception exception) {
             return objectMapper.createObjectNode().put("raw", raw);
         }
     }

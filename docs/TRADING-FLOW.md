@@ -47,10 +47,15 @@ GET  /api/trading-flow/ai-provider-performance?days=7
 ```
 
 ```http
-GET  /api/strategy/analysis/signals?status=CANDIDATE
-GET  /api/strategy/analysis/signals/{id}
-POST /api/strategy/analysis/article/{articleId}
+GET  /api/strategies/analysis/signals?status=CANDIDATE
+GET  /api/strategies/analysis/signals/{id}
+POST /api/strategies/analysis/article/{articleId}
+POST /api/recommendations/sync
+POST /api/recommendations/stocks/{id}/approve
+PATCH /api/recommendations/settings
 ```
+
+**종목 추천 → 모의/실전 매수:** 설정에서 실행 단계 선택 후 `POST /api/recommendations/sync` → 승인 또는 AUTO 스캔.
 
 ```http
 GET  /api/disclosures?stockCode=005930&days=7

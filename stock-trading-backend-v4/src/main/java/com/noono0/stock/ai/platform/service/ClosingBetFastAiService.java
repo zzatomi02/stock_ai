@@ -121,12 +121,12 @@ public class ClosingBetFastAiService {
                     chat.elapsedMs(),
                     timeoutMs);
             return true;
-        } catch (TimeoutException e) {
+        } catch (TimeoutException exception) {
             future.cancel(true);
             log.warn("[CLOSING-FAST-AI] timeout {}ms stock={}", timeoutMs, stockCode);
             return false;
-        } catch (Exception e) {
-            log.warn("[CLOSING-FAST-AI] 오류 stock={} — {}", stockCode, e.getMessage());
+        } catch (Exception exception) {
+            log.warn("[CLOSING-FAST-AI] 오류 stock={} — {}", stockCode, exception.getMessage());
             return false;
         }
     }

@@ -34,8 +34,8 @@ public class KisSecretCrypto {
             System.arraycopy(iv, 0, out, 0, iv.length);
             System.arraycopy(enc, 0, out, iv.length, enc.length);
             return Base64.getEncoder().encodeToString(out);
-        } catch (Exception e) {
-            throw new IllegalStateException("KIS 자격증명 암호화 실패", e);
+        } catch (Exception exception) {
+            throw new IllegalStateException("KIS 자격증명 암호화 실패", exception);
         }
     }
 
@@ -52,16 +52,16 @@ public class KisSecretCrypto {
             cipher.init(Cipher.DECRYPT_MODE, keySpec, new GCMParameterSpec(TAG_BITS, iv));
             byte[] dec = cipher.doFinal(body);
             return new String(dec, StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            throw new IllegalStateException("KIS 자격증명 복호화 실패", e);
+        } catch (Exception exception) {
+            throw new IllegalStateException("KIS 자격증명 복호화 실패", exception);
         }
     }
 
     private static byte[] sha256(String src) {
         try {
             return MessageDigest.getInstance("SHA-256").digest(src.getBytes(StandardCharsets.UTF_8));
-        } catch (Exception e) {
-            throw new IllegalStateException("SHA-256 초기화 실패", e);
+        } catch (Exception exception) {
+            throw new IllegalStateException("SHA-256 초기화 실패", exception);
         }
     }
 }

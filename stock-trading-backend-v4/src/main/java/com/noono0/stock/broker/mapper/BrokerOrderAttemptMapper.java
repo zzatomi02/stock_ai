@@ -29,4 +29,6 @@ public interface BrokerOrderAttemptMapper {
             @Param("stockCode") String stockCode,
             @Param("side") String side,
             @Param("after") LocalDateTime after);
+
+    int countBySignalId(@Param("signalId") long signalId);
 }
